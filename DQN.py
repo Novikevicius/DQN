@@ -46,9 +46,10 @@ def train(ID, agent, epochs=1000, batchSize = 32):
                 if score > max_score:
                     max_score = score
                 if e % 50 == 0:
-                    print("Episode: ", e, "Score", max_score)
+                    print("Epoch: ", e, "Score", max_score)
                     max_score = 0
                 break
+        print("Epoch: ", epochs, "Score", max_score)
         results.append(score)
         batch_size = batchSize
         if len(memory) < batch_size:
@@ -79,7 +80,6 @@ def test(ID, eps):
         state = np.array([env.reset()])
         done = False
         score = 0
-        print("\t\Epoch: ", e)
         for i in range(300):
             action = np.argmax(agent.predict(state))
             new_state, reward, done, _ = env.step(action)
@@ -92,7 +92,8 @@ def test(ID, eps):
             score += 1
         if score > max_score:
             max_score = score
-        print(score)
+        print("Epoch:", e, "score", score)
+    print("Max score", max_score)
     env.close()
 
 if __name__ == "__main__":
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     gamma = 0.95
     agent = createModel()
     agent.summary()
-    r = None
+    r = []
     running = True
     ID = 0
     while running:
@@ -110,14 +111,16 @@ if __name__ == "__main__":
             running = False
             break
         if command=='t':
-            r = train(ID, agent, 100)
+            r.extend(train(ID, agent, 100))
         if command == 'p' and r:
             plot(r)
         if command=='r':
-            test(ID, 200)
+            test(ID, 100)
         if command=='c':
             agent = createModel()
+            r = []
         if command=='a':
             temp = input("Choose ID: \n")
             ID = int(temp)
+            r = []
     env.close()
