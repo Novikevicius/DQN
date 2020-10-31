@@ -34,45 +34,53 @@ class DQN_Agent():
             self.agent.add(Dense(env.action_space.n, activation=activation_fn ))        
             self.agent.compile(loss=loss_fn, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
 
-    def train(self, gamma=0.99, epochs=1000, batchSize = 50):
+    def train(self, gamma=0.99, epochs=1000, batchSize = 50, file=None):
         results = []
         max_score = 0
         for e in range(epochs):
-            state = np.array([self.env.reset()])
             done = False
             score = 0
-            for i in range(250):
+            state = np.array([self.env.reset()])
+            for i in range(500):
                 action = np.argmax(self.agent.predict(state))
-
                 new_state, reward, done, _ = self.env.step(action)
-
                 new_state = np.array([new_state])
 
-                self.memory.append([state, action, reward, new_state, done])
+                self.rember([state, action, reward, new_state, done])
+
                 score += 1
                 state = new_state
 
                 if done:
                     if score > max_score:
                         max_score = score
-                    if e % 50 == 0:
-                        print("Epoch: ", e, "Score", max_score)
+                    if e % 10 == 0:
+                        log_msg = "Epoch: " +  str(e) + ", score" +  str(max_score)
+                        if file:
+                            file.write(log_msg + '\n')
+                        else:
+                            print(log_msg)
                         max_score = 0
                     break
             results.append(score)
-            batch_size = batchSize
-            if len(self.memory) < batch_size:
-                continue
-            data = random.sample(self.memory, batch_size)
-            for s, a, r, s_new, done in data:
-                target = r
-                if not done:
-                    target = r + gamma * np.max(self.agent.predict(s_new)[0])
-                T_s = self.agent.predict(np.array(s))
-                T_s[0][a] = target
-                self.agent.fit(s, T_s, verbose=0)
+            self.replay(batchSize)
+
         self.save()
         return results
+    def rember(self, s):
+        self.memory.append(s)
+    def replay(self, gamma=0.99, batch_size=50):
+        if len(self.memory) < batch_size:
+            return
+        data = random.sample(self.memory, batch_size)
+        for s, a, r, s_new, done in data:
+            target = r
+            if not done:
+                target = r + gamma * np.max(self.agent.predict(s_new)[0])
+            T_s = self.agent.predict(np.array(s))
+            T_s[0][a] = target
+            self.agent.fit(s, T_s, verbose=0)
+
     def save(self, filename=None):
         if filename == None:
             filename = MODELS_FOLDER + str(self.ID)
@@ -192,8 +200,10 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
         f.write("Model summary:\n")
         agent.agent.summary(print_fn=lambda s: f.write(s + '\n'))
 
-        r = agent.train(gamma=gamma,  epochs=epochs, batchSize=100)
+        r = agent.train(gamma=gamma,  epochs=epochs, batchSize=100, file=f)
         plot(r, fullPath, ID)
+        f.write("Final score: " + str(r[len(r)-1]) + '\n')
+        print("Final score: " + str(r[len(r)-1]))
 
     return ID+1
 
@@ -202,7 +212,8 @@ if __name__ == "__main__":
     global env
     env = gym.make("CartPole-v1")
 
-    run()
+    #run()
+    run_DQN_experiments()
 
     env.close()
     sys.exit(0)
