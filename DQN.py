@@ -17,12 +17,13 @@ import os
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
 
 class DQN_Agent():
-    def __init__(self, env, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None):
+    def __init__(self, env, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None , use_target_network=True):
         self.env = env
         self.ID = ID
         self.lr = lr
         self.activation_fn = activation_fn
         self.loss_fn = loss_fn
+        self.use_target_network = use_target_network
         self.memory = deque(maxlen=500)
         if filename:
             from keras.models import load_model
@@ -33,6 +34,9 @@ class DQN_Agent():
             self.agent.add(Dense(25, activation='relu'))
             self.agent.add(Dense(env.action_space.n, activation=activation_fn ))        
             self.agent.compile(loss=loss_fn, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
+            
+            if self.use_target_network:
+                self.target = keras.models.clone_model(self.agent)
 
     def train(self, gamma=0.99, epochs=1000, batchSize = 50, file=None):
         results = []
@@ -64,6 +68,8 @@ class DQN_Agent():
                     break
             results.append(score)
             self.replay(batchSize)
+            if self.use_target_network and e % 50 == 0 and e != 0:
+                self.target = keras.models.clone_model(self.agent)
 
         self.save()
         return results
@@ -76,7 +82,11 @@ class DQN_Agent():
         for s, a, r, s_new, done in data:
             target = r
             if not done:
-                target = r + gamma * np.max(self.agent.predict(s_new)[0])
+                if self.use_target_network:
+                    prediction = self.target.predict(s_new)
+                else:
+                    prediction = self.agent.predict(s_new)
+                target = r + gamma * np.max(prediction[0])
             T_s = self.agent.predict(np.array(s))
             T_s[0][a] = target
             self.agent.fit(s, T_s, verbose=0)
@@ -165,10 +175,11 @@ def run_DQN_experiments():
     else:
         ID = 0
 
-    ID = run_experiment(ID, 100, 0.01,  0.99, 'linear', 'mse')
-    ID = run_experiment(ID, 100, 0.1,   0.99, 'linear', 'mse')
-    ID = run_experiment(ID, 100, 0.1,   0.99, 'linear', 'mse')
-    ID = run_experiment(ID, 100, 0.001, 0.90, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
+    ID = run_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
 
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
