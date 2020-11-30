@@ -1,16 +1,16 @@
 import numpy as np
 from numpy.core.fromnumeric import argmax
 
-class QTable(object):
+class Input(object):
     def __init__(self, state_space, action_space) -> None:
         self.state_space = state_space
         self.action_space = action_space
         b1, b2 = Bucket(self.action_space, float('-inf'), float('inf')).split()
-        self.table = [b1, b2]
+        self.buckets = [b1, b2]
     def train(self, env, epochs=100, lr=0.01):
         pass
     def get_values(self, state):
-        for b in self.table:
+        for b in self.buckets:
             if b.is_in_range:
                 return b
         return None
@@ -19,18 +19,18 @@ class QTable(object):
     def get_best_action(self, state):
         pass #return
     def split(self, i, step=100):
-        if i < 0 or i > len(self.table):
+        if i < 0 or i > len(self.buckets):
             return
-        b1, b2 = self.table[i].split(step)
-        a1 = self.table[:(i-1)]
-        a2 = self.table[(i+1):]
-        self.table = a1
-        self.table.append(b1)
-        self.table.append(b2)
-        self.table.extend(a2)
+        b1, b2 = self.buckets[i].split(step)
+        a1 = self.buckets[:(i-1)]
+        a2 = self.buckets[(i+1):]
+        self.buckets = a1
+        self.buckets.append(b1)
+        self.buckets.append(b2)
+        self.buckets.extend(a2)
     def __str__(self):
         s = "["
-        for b in self.table:
+        for b in self.buckets:
             s += '{' + str(b) + "},\n"
         s += ']'
         return s
