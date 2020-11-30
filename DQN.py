@@ -224,9 +224,10 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
 
     print("Running experiment " + str(ID) + ":")
     # train agent
-    table = QTable(10, 3)
-    table.split(0, 50)
+    table = QTable(4, 3)
     print(table)
+    state = env.reset()
+    print(state)
     with open(fullPathWithExt, 'w') as f:
         f.write("Experiment "     + str(ID)     + ':\n')
         f.write("Epochs: "        + str(epochs) + '\n')

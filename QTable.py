@@ -1,9 +1,19 @@
 import numpy as np
 from numpy.core.fromnumeric import argmax
 
-class Input(object):
+class QTable(object):
     def __init__(self, state_space, action_space) -> None:
         self.state_space = state_space
+        self.action_space = action_space
+        self.table = [Input(self.action_space) for i in range(self.state_space)]
+    def __str__(self):
+        s = ""
+        for input in self.table:
+            s += str(input) + "\n"
+        return s
+
+class Input(object):
+    def __init__(self, action_space) -> None:
         self.action_space = action_space
         b1, b2 = Bucket(self.action_space, float('-inf'), float('inf')).split()
         self.buckets = [b1, b2]
