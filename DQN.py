@@ -1,3 +1,4 @@
+from QTable import QTable
 from os import system
 import random
 import gym
@@ -203,9 +204,9 @@ def run_q_table_experiments():
     #ID = run_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
     #ID = run_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
     ID = run_q_table_experiment(ID, 100, 0.01)
-    with open(experiment_ID_file, 'w') as f:
-        f.write(str(ID)+'\n')
-        f.close()
+   # with open(experiment_ID_file, 'w') as f:
+   #     f.write(str(ID)+'\n')
+   #     f.close()
 
 def run_q_table_experiment(ID, epochs=100, lr=0.01):
     global env
@@ -223,7 +224,8 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
 
     print("Running experiment " + str(ID) + ":")
     # train agent
-
+    table = QTable(10, 3)
+    print(table.get_max_value(5))
     with open(fullPathWithExt, 'w') as f:
         f.write("Experiment "     + str(ID)     + ':\n')
         f.write("Epochs: "        + str(epochs) + '\n')
