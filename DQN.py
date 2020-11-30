@@ -184,6 +184,55 @@ def run_DQN_experiments():
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
         f.close()
+    
+def run_q_table_experiments():
+    global env
+    global MODELS_FOLDER
+    MODELS_FOLDER = 'experiments/Q_Table/models/'
+    experiment_ID_file = 'experiments/Q_Table/exp_ID.txt'
+    if os.path.exists(experiment_ID_file):
+        with open(experiment_ID_file, 'r+') as f:
+            ID = int(f.readline())
+            f.close()
+    else:
+        ID = 0
+
+    #ID = run_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
+    #ID = run_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
+    ID = run_q_table_experiment(ID, 100, 0.01)
+    with open(experiment_ID_file, 'w') as f:
+        f.write(str(ID)+'\n')
+        f.close()
+
+def run_q_table_experiment(ID, epochs=100, lr=0.01):
+    global env
+    experiments_folder = 'experiments'
+    agent_folder    = 'Q_Table'
+    folder          = experiments_folder + '/' + agent_folder
+    file            = str(ID)
+    fullPath        = folder + '/' + file
+    fullPathWithExt = fullPath + '.txt'
+
+    if not os.path.exists(experiments_folder):
+        os.mkdir(experiments_folder)
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+
+    print("Running experiment " + str(ID) + ":")
+    # train agent
+
+    with open(fullPathWithExt, 'w') as f:
+        f.write("Experiment "     + str(ID)     + ':\n')
+        f.write("Epochs: "        + str(epochs) + '\n')
+        f.write("Learning rate: " + str(lr)     + '\n')
+
+        #plot(r, fullPath, ID)
+        #f.write("Final score: " + str(r[len(r)-1]) + '\n')
+        #print("Final score: " + str(r[len(r)-1]))
+    return ID+1
 
 def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', loss='mse'):
     global env
@@ -224,7 +273,8 @@ if __name__ == "__main__":
     env = gym.make("CartPole-v1")
 
     #run()
-    run_DQN_experiments()
+    #run_DQN_experiments()
+    run_q_table_experiments()
 
     env.close()
     sys.exit(0)
