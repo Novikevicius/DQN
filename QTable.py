@@ -6,9 +6,7 @@ class QTable(object):
         self.state_space = state_space
         self.action_space = action_space
         b1, b2 = Bucket(self.action_space, float('-inf'), float('inf')).split()
-        b11, b12 = b1.split()
-        b21, b22 = b2.split()
-        self.table = [b11, b12, b21, b22]
+        self.table = [b1, b2]
     def train(self, env, epochs=100, lr=0.01):
         pass
     def get_values(self, state):
@@ -20,6 +18,16 @@ class QTable(object):
         return self.get_value(state).get_max()
     def get_best_action(self, state):
         pass #return
+    def split(self, i, step=100):
+        if i < 0 or i > len(self.table):
+            return
+        b1, b2 = self.table[i].split(step)
+        a1 = self.table[:(i-1)]
+        a2 = self.table[(i+1):]
+        self.table = a1
+        self.table.append(b1)
+        self.table.append(b2)
+        self.table.extend(a2)
     def __str__(self):
         s = "["
         for b in self.table:
@@ -49,10 +57,9 @@ class Bucket(object):
     def resize(self, min, max):
         self.min = min
         self.max = max
-    def split(self):
+    def split(self, step=100):
         min = self.min
         max = self.max
-        step = 100
         if min == float('-inf') and max == float('inf'):
             mid = 0
         elif min == float('-inf'):
@@ -62,9 +69,11 @@ class Bucket(object):
         else:            
             mid = (self.max+self.min)/2
         b1 = Bucket(self.space, min, mid)
+        b1.values = np.copy(self.values)
         b2 = Bucket(self.space, mid, max)
+        b2.values = np.copy(self.values)
         return (b1, b2)
     def is_in_range(self, value):
-        return value >= min or value < max
+        return value >= self.min and value < self.max
     def __str__(self):
         return str.format("[{0}, {1}) ", self.min, self.max) + str(self.values)
