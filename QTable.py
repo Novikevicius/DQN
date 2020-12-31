@@ -23,9 +23,9 @@ class Input(object):
     def split(self, step_size):
         return (self.max - self.min) / step_size
     def map(self, value):
-        if( value <= self.min):
+        if( value < self.min):
             return 0
-        if (value >= self.max):
+        if (value > self.max):
             return self.size-1
         return (round(value, self.precision)-self.min) * self.step_size + 1
 
@@ -35,7 +35,9 @@ def test_map():
     max = 5
     step = 1
     input = Input(min, max, step, 0)
-    assert(input.map(min) == 0)
-    assert(input.map(max) == input.size-1)
-    for i in range(min+1, max-1, step):
+    assert(input.map(min) == 1)
+    assert(input.map(max) == input.size-2)
+    assert(input.map(min-1) == 0)
+    assert(input.map(max+1) == input.size-1)
+    for i in range(min, max, step):
         assert(input.map(i) == i)
