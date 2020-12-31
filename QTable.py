@@ -7,8 +7,10 @@ class QTable(object):
         self.state_space = state_space
         self.action_space = action_space
         self.table = [Input(0, 1, 0.1, 1) for i in range(self.state_space)]
-        self.shape = tuple([self.table[i].size for i in range(self.state_space)])
-        self.n = 1
+        self.shape = [self.table[i].size for i in range(self.state_space)]
+        self.shape.append(action_space)
+        self.shape = tuple(self.shape)
+        self.n = action_space
         for i in range(self.state_space):
             self.n *= self.table[i].size
         self.values = np.array([0] * self.n)
@@ -27,10 +29,11 @@ class QTable(object):
         return v
 
     
-    def setValue(self, state, value):
+    def setValue(self, state, action, value):
         indexes = []
         for i in range(self.state_space):
             indexes.append(self.table[i].map(state[i]))
+        indexes.append(action)
         self.values[tuple(indexes)] = value
 
 class Input(object):
