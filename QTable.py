@@ -28,10 +28,7 @@ class Input(object):
             return 0
         if (value > self.max):
             return self.size-1
-        rounded = round(value, self.precision)
-        t = rounded - self.min
-        t2 = math.ceil(t / self.step_size)
-        return t2 + 1
+        return math.ceil((round(value, self.precision) - self.min) / self.step_size) + 1
 
 
 def test_map():
