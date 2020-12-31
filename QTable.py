@@ -6,12 +6,32 @@ class QTable(object):
     def __init__(self, state_space, action_space) -> None:
         self.state_space = state_space
         self.action_space = action_space
-        self.table = [Input(self.action_space) for i in range(self.state_space)]
+        self.table = [Input(0, 1, 0.1, 1) for i in range(self.state_space)]
+        self.shape = tuple([self.table[i].size for i in range(self.state_space)])
+        self.n = 1
+        for i in range(self.state_space):
+            self.n *= self.table[i].size
+        self.values = np.array([0] * self.n)
+        self.values = np.reshape(self.values, self.shape)
+        
+        
     def __str__(self):
         s = ""
         for input in self.table:
             s += str(input) + "\n"
         return s
+    def getValue(self, state):
+        v = self.values
+        for i in range(self.state_space):
+            v = v[self.table[i].map(state[i])]
+        return v
+
+    
+    def setValue(self, state, value):
+        indexes = []
+        for i in range(self.state_space):
+            indexes.append(self.table[i].map(state[i]))
+        self.values[tuple(indexes)] = value
 
 class Input(object):
     def __init__(self, min, max, step_size, precision=2) -> None:
@@ -35,6 +55,12 @@ class Input(object):
         self.values[self.map(x)] = new_value
     def increaseValueBy(self, x, value):
         self.values[self.map(x)] += value
+    def __str__(self):
+        s = '['
+        for i in range(self.size-2):
+            s += str(self.values[i]) + ', '
+        s += str(self.values[self.size-1]) + ']'
+        return s
 
 
 def test_map():
