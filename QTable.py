@@ -3,20 +3,21 @@ from numpy.core.fromnumeric import argmax
 import math
 
 class QTable(object):
-    def __init__(self, state_space, action_space, model=None) -> None:
-        self.state_space = state_space
-        self.action_space = action_space
+    def __init__(self, action_space, state_space=None, model=None) -> None:
         if model:
             self.table = model
+            self.state_space = len(model)
         else:
             self.table = [Input(0, 1, 0.1, 1) for i in range(self.state_space)]
+            self.state_space = state_space
         self.shape = [self.table[i].size for i in range(self.state_space)]
+        self.action_space = action_space
         self.shape.append(action_space)
         self.shape = tuple(self.shape)
         self.n = action_space
         for i in range(self.state_space):
             self.n *= self.table[i].size
-        self.values = np.array([0] * self.n)
+        self.values = np.array([0.0] * self.n)
         self.values = np.reshape(self.values, self.shape)
         
         
@@ -26,6 +27,13 @@ class QTable(object):
             s += str(input) + "\n"
         return s
     def getValue(self, state):
+        indexes = []
+        for i in range(self.state_space):
+            if type(state) is list:
+                indexes.append(self.table[i].map(state[i]))
+            else:
+                indexes.append(self.table[i].map(state))
+        return self.values[tuple(indexes)]
         v = self.values
         for i in range(self.state_space):
             if type(state) is list:
@@ -43,7 +51,10 @@ class QTable(object):
             else:
                 indexes.append(self.table[i].map(state))
         indexes.append(action)
+        t = self.values[tuple(indexes)]
         self.values[tuple(indexes)] = value
+        t = self.values[tuple(indexes)]
+        t = 0
 
 class Input(object):
     def __init__(self, min, max, step_size, precision=2) -> None:
