@@ -60,7 +60,6 @@ class Input(object):
         self.max = max
         self.step_size = step_size
         self.size = int((self.max-self.min) / step_size + 1) + 2 # -inf & +inf
-        self.values = [0] * self.size
     def split(self, step_size):
         return (self.max - self.min) / step_size
     def map(self, value):
