@@ -1,4 +1,3 @@
-from QTable import QTable
 from os import system
 import random
 import gym
@@ -14,6 +13,7 @@ from keras.layers import Conv2D, MaxPooling2D
 import matplotlib.image as mpimg
 from IPython import display
 import os
+import QTable
 
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
 
@@ -203,12 +203,18 @@ def run_q_table_experiments():
     #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
     #ID = run_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
     #ID = run_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
-    ID = run_q_table_experiment(ID, 100, 0.01)
+    ID = run_q_table_experiment(ID, 10000, 0.1)
    # with open(experiment_ID_file, 'w') as f:
    #     f.write(str(ID)+'\n')
    #     f.close()
 
 def run_q_table_experiment(ID, epochs=100, lr=0.01):
+    def choose_action(table, state):
+        if random.uniform(0, 1) > epsilon:
+            action = np.argmax(table.getValue(state))
+        else:
+            action = env.action_space.sample()
+        return action
     global env
     experiments_folder = 'experiments'
     agent_folder    = 'Q_Table'
@@ -223,11 +229,48 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         os.mkdir(folder)
 
     print("Running experiment " + str(ID) + ":")
-    # train agent
-    table = QTable(4, 3)
+    gamma = 0.99
+    epsilon = 1
+    max_exploration_rate = 1
+    min_exploration_rate = 0.01
+    exploration_decay_rate = 0.01
+    #table = QTable(env.observation_space.shape[0], env.action_space.n)
+    model = [QTable.Input(0, 15, 1, 0)]
+    table = QTable.QTable(1, env.action_space.n, model=model)
+    rewards = []
+    max_steps = 100
+    for e in range(epochs):
+        state = env.reset()
+        done = False
+        r = 0
+        for s in range(max_steps):
+            action = choose_action(table, state)
+            new_state, reward, done, _ = env.step(action)
+            t1 = table.getValue(state)[action] * (1-lr)
+            t2 = table.getValue(state)[action]
+            q_new = table.getValue(state)[action] * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)))
+            table.setValue(state, action, q_new)
+            state = new_state
+            r += reward
+            if done:
+                break
+        epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
+        rewards.append(r)
+    
+    rewards_per_thousand_episodes = np.split(np.array(rewards),epochs/1000)
+    count = 1000
+
+    print("********Average reward per thousand episodes********\n")
+    for r in rewards_per_thousand_episodes:
+        print(count, ": ", str(sum(r/1000)))
+        count += 1000
+    
+    #table.printNonZeros()
+    #plot(rewards)
+    #play(env, table)
     print(table)
-    state = env.reset()
-    print(state)
+    #play(env, table)
+    return ID+1
     with open(fullPathWithExt, 'w') as f:
         f.write("Experiment "     + str(ID)     + ':\n')
         f.write("Epochs: "        + str(epochs) + '\n')
@@ -237,6 +280,36 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         #f.write("Final score: " + str(r[len(r)-1]) + '\n')
         #print("Final score: " + str(r[len(r)-1]))
     return ID+1
+def play(env, table):
+    epsilon = 1
+    rewards = []
+    def choose_action(table, state):
+        if random.uniform(0, 1) > epsilon:
+            action = np.argmax(table.getValue(state))
+        else:
+            action = env.action_space.sample()
+        return action
+    for e in range(3):
+        import time
+        state = env.reset()
+        done = False
+        r = 0
+        print("*****EPISODE ", e+1, "*****\n\n\n\n")
+        time.sleep(1)
+        for s in range(1000):
+            env.render()
+            action = choose_action(table, state)
+            new_state, reward, done, _ = env.step(action)
+            state = new_state
+            r += reward
+            
+            if done:
+                print("Your reward:", reward)
+                time.sleep(3)
+                break
+        rewards.append(r)
+    env.close()
+    plot(rewards)
 
 def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', loss='mse'):
     global env
@@ -274,8 +347,10 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
 if __name__ == "__main__":
     import sys
     global env
-    env = gym.make("CartPole-v1")
-
+    #env = gym.make("CartPole-v1")
+    env = gym.make("FrozenLake-v0")
+    state = env.reset()
+   
     #run()
     #run_DQN_experiments()
     run_q_table_experiments()
