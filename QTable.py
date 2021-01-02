@@ -52,6 +52,10 @@ class QTable(object):
         self.values[tuple(indexes)] = value
         t = self.values[tuple(indexes)]
         t = 0
+    
+    def save(self, fileName):
+        a = np.asfarray(self.values)
+        np.save(fileName, a)
 
 class Input(object):
     def __init__(self, min, max, step_size, precision=2) -> None:
