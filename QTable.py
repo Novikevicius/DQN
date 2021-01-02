@@ -22,10 +22,7 @@ class QTable(object):
         
         
     def __str__(self):
-        s = ""
-        for input in self.table:
-            s += str(input) + "\n"
-        return s
+        return str(self.values)
     def getValue(self, state):
         indexes = []
         for i in range(self.state_space):
