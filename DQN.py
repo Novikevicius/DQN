@@ -189,11 +189,10 @@ def run_DQN_experiments():
         f.write(str(ID)+'\n')
         f.close()
     
-def run_q_table_experiments():
-    global env
+def run_frozen_lake_experiments():
     global MODELS_FOLDER
-    MODELS_FOLDER = 'experiments/Q_Table/models/'
-    experiment_ID_file = 'experiments/Q_Table/exp_ID.txt'
+    MODELS_FOLDER = 'experiments/Q_Table/FrozenLake/models/'
+    experiment_ID_file = 'experiments/Q_Table/FrozenLake/exp_ID.txt'
     if os.path.exists(experiment_ID_file):
         with open(experiment_ID_file, 'r+') as f:
             ID = int(f.readline())
