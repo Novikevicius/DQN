@@ -199,18 +199,15 @@ def run_frozen_lake_experiments():
             f.close()
     else:
         ID = 0
+    ID = run_frozen_lake_experiment(ID, epochs=3000, lr=0.1, gamma=0.99)
+    ID = run_frozen_lake_experiment(ID, epochs=3000, lr=0.01, gamma=0.99)
+    ID = run_frozen_lake_experiment(ID, epochs=3000, lr=0.1, gamma=0.99)
+    ID = run_frozen_lake_experiment(ID, epochs=10000, lr=0.1, gamma=0.99, result_x_size=500)
+    with open(experiment_ID_file, 'w') as f:
+        f.write(str(ID)+'\n')
+        f.close()
 
-    #ID = run_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
-    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
-    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
-    #ID = run_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
-    #ID = run_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
-    ID = run_q_table_experiment(ID, 10000, 0.1)
-   # with open(experiment_ID_file, 'w') as f:
-   #     f.write(str(ID)+'\n')
-   #     f.close()
-
-def run_q_table_experiment(ID, epochs=100, lr=0.01):
+def run_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100):
     def choose_action(table, state):
         if random.uniform(0, 1) > epsilon:
             action = np.argmax(table.getValue(state))
@@ -281,7 +278,8 @@ def load_frozen_lake_agent(ID):
     MODELS_FOLDER = 'experiments/Q_Table/FrozenLake/models/'
     return QTable.QTable.load(MODELS_FOLDER+str(ID))
 
-def play_frozen_lake(table):
+def play_frozen_lake(table, n=1, verbose=0):
+    # verbose 0 - no priniting, with visualization, 1 - only printing, 2 - print and plot graph, 3 - only plot graph
     env = gym.make("FrozenLake-v0")
     epsilon = 1
     rewards = []
@@ -291,28 +289,33 @@ def play_frozen_lake(table):
         else:
             action = env.action_space.sample()
         return action
-    for e in range(3):
+    for e in range(n):
         import time
         state = env.reset()
         done = False
         r = 0
-        print("*****EPISODE ", e+1, "*****\n\n\n\n")
-        time.sleep(1)
-        for s in range(1000):
-            env.render()
+        if verbose == 1 or verbose == 2:
+            print("*****EPISODE ", e+1, "*****\n\n\n\n")
+            time.sleep(1)
+        for s in range(100):
+            if verbose == 0:
+                env.render()
             action = choose_action(table, state)
             new_state, reward, done, _ = env.step(action)
             state = new_state
             r += reward
             
             if done:
-                print("Your reward:", reward)
-                time.sleep(3)
+                if verbose == 1 or verbose == 2:
+                    print("Your reward:", reward)
+                    time.sleep(3)
                 break
         rewards.append(r)
     env.close()
-    plot(rewards)
-
+    if verbose == 3 or verbose == 2:
+        plot(rewards)
+    return rewards
+    
 def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', loss='mse'):
     global env
     experiments_folder = 'experiments'
