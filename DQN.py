@@ -217,9 +217,9 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         return action
     global env
     experiments_folder = 'experiments'
-    agent_folder    = 'Q_Table'
+    agent_folder    = 'Q_Table/FrozenLake'
     folder          = experiments_folder + '/' + agent_folder
-    file            = str(ID)
+    file            = 'FrozenLake_'+str(ID)
     fullPath        = folder + '/' + file
     fullPathWithExt = fullPath + '.txt'
 
@@ -235,8 +235,8 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
     min_exploration_rate = 0.01
     exploration_decay_rate = 0.01
     #table = QTable(env.observation_space.shape[0], env.action_space.n)
-    model = [QTable.Input(0, 15, 1, 0)]
-    table = QTable.QTable(1, env.action_space.n, model=model)
+    model = [QTable.Input(0, 16, 1, 0)]
+    table = QTable.QTable(env.action_space.n, model=model)
     rewards = []
     max_steps = 100
     for e in range(epochs):
@@ -257,13 +257,13 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
         rewards.append(r)
     
-    rewards_per_thousand_episodes = np.split(np.array(rewards),epochs/1000)
-    count = 1000
+    rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
+    count = result_x_size
 
-    print("********Average reward per thousand episodes********\n")
-    for r in rewards_per_thousand_episodes:
-        print(count, ": ", str(sum(r/1000)))
-        count += 1000
+    results = [] # average rewards per result_x_size episodes
+    for r in rewards_per_x_episodes:
+        results.append(sum(r/result_x_size))
+        count += result_x_size
     
     #table.printNonZeros()
     #plot(rewards)
@@ -272,13 +272,15 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
     #play(env, table)
     return ID+1
     with open(fullPathWithExt, 'w') as f:
-        f.write("Experiment "     + str(ID)     + ':\n')
-        f.write("Epochs: "        + str(epochs) + '\n')
-        f.write("Learning rate: " + str(lr)     + '\n')
+        f.write("Experiment "     + str(ID)        + ':\n')
+        f.write("Epochs: "        + str(epochs)    + '\n')
+        f.write("Learning rate: " + str(lr)        + '\n')
+        f.write("Gamma: "         + str(gamma)     + '\n')
 
-        #plot(r, fullPath, ID)
-        #f.write("Final score: " + str(r[len(r)-1]) + '\n')
-        #print("Final score: " + str(r[len(r)-1]))
+        plot(results, fullPath, ID, xs=[i for i in range(result_x_size, epochs+1, result_x_size)])
+        f.write("Final score: " + str(results[len(results)-1]) + '\n')
+        print("Final score: " + str(results[len(results)-1]))
+    table.save(MODELS_FOLDER+str(ID))
     return ID+1
 
 def load_frozen_lake_agent(ID):
