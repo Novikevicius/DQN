@@ -122,7 +122,9 @@ class DQN_Agent():
 def plot(results, saveFolder=None, ID=0, xs=None):
     plt.title("Score per episode")
     if not xs:
-    plt.plot(results)
+        plt.plot(results)
+    else:
+        plt.plot(xs, results)
     if saveFolder:
         plt.savefig(saveFolder)
     else:
