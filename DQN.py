@@ -280,7 +280,14 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         #f.write("Final score: " + str(r[len(r)-1]) + '\n')
         #print("Final score: " + str(r[len(r)-1]))
     return ID+1
-def play(env, table):
+
+def load_frozen_lake_agent(ID):
+    global MODELS_FOLDER
+    MODELS_FOLDER = 'experiments/Q_Table/FrozenLake/models/'
+    return QTable.QTable.load(MODELS_FOLDER+str(ID))
+
+def play_frozen_lake(table):
+    env = gym.make("FrozenLake-v0")
     epsilon = 1
     rewards = []
     def choose_action(table, state):
