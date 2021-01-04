@@ -1,5 +1,5 @@
+from os import error
 import numpy as np
-from numpy.core.fromnumeric import argmax
 import math
 
 class QTable(object):
@@ -57,10 +57,30 @@ class QTable(object):
         a = np.asfarray(self.values)
         np.save(fileName, a)
         with open(fileName + '.inputs', 'w') as f:
-            f.write('action_space:' + str(len(self.action_space)) + '\n')
-            f.write('state_space:' + str(len(self.state_space)) + '\n')
+            f.write('action_space: ' + str(self.action_space) + '\n')
+            f.write('state_space: ' + str(self.state_space) + '\n')
             for i in self.table:
                 i.save(f)
+    @staticmethod
+    def load(fileName):
+        values = np.array(np.load(fileName + '.npy'))
+        model = []
+        with open(fileName + '.inputs', 'r') as f:
+            action_space = int(QTable.read_field(f, 'action_space'))
+            state_space  = int(QTable.read_field(f, 'state_space'))
+            for i in range(state_space):
+                model.append(Input.load(f))
+        return QTable(action_space, state_space, model)
+
+    @staticmethod
+    def read_field(f, field_name):
+        line = f.readline()
+        tokens = line.splitlines()[0].split(' ')
+        if len(tokens) != 2:
+            raise error("Wrong file format: not enough tokens, expected: 2, got: " + str(len(tokens)))
+        if tokens[0] != field_name + ':':
+            raise error("Wrong file format: expected: " + field_name + ", got: " + tokens[0])
+        return tokens[1]
 
 class Input(object):
     def __init__(self, min, max, step_size, precision=2) -> None:
@@ -90,12 +110,20 @@ class Input(object):
         s += str(self.values[self.size-1]) + ']'
         return s
     def save(self, f):
-        f.write('Input:\n')
         f.write(str(self.precision) + '\n')
         f.write(str(self.min) + '\n')
         f.write(str(self.max) + '\n')
         f.write(str(self.step_size) + '\n')
-        f.write(str(self.size) + '\n')
+    
+    @staticmethod
+    def load(file):
+        precision = int(file.readline().splitlines()[0])
+        min = float(file.readline().splitlines()[0])
+        max = float(file.readline().splitlines()[0])
+        step_size = float(file.readline().splitlines()[0])
+        return Input(min, max, step_size, precision)
+
+
 
 
 def test_map():
