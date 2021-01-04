@@ -99,12 +99,6 @@ class Input(object):
         if (value > self.max):
             return self.size-1
         return math.ceil((round(value, self.precision) - self.min) / self.step_size) + 1
-    def getValue(self, x):
-        return self.values[self.map(x)]
-    def setValue(self, x, new_value):
-        self.values[self.map(x)] = new_value
-    def increaseValueBy(self, x, value):
-        self.values[self.map(x)] += value
     def __str__(self):
         s = '['
         for i in range(self.size-2):
