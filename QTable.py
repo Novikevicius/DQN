@@ -56,6 +56,10 @@ class QTable(object):
     def save(self, fileName):
         a = np.asfarray(self.values)
         np.save(fileName, a)
+        with open(fileName + '.inputs', 'w') as f:
+            f.write('Count' + str(len(self.table)) + '\n')
+            for i in self.table:
+                i.save(f)
 
 class Input(object):
     def __init__(self, min, max, step_size, precision=2) -> None:
@@ -84,6 +88,13 @@ class Input(object):
             s += str(self.values[i]) + ', '
         s += str(self.values[self.size-1]) + ']'
         return s
+    def save(self, f):
+        f.write('Input:\n')
+        f.write(str(self.precision) + '\n')
+        f.write(str(self.min) + '\n')
+        f.write(str(self.max) + '\n')
+        f.write(str(self.step_size) + '\n')
+        f.write(str(self.size) + '\n')
 
 
 def test_map():
