@@ -119,8 +119,9 @@ class DQN_Agent():
             print("Epoch:", e, "score", score)
         print("Max score", max_score)
 
-def plot(results, saveFolder=None, ID=0):
+def plot(results, saveFolder=None, ID=0, xs=None):
     plt.title("Score per episode")
+    if not xs:
     plt.plot(results)
     if saveFolder:
         plt.savefig(saveFolder)
