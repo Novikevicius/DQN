@@ -70,7 +70,9 @@ class QTable(object):
             state_space  = int(QTable.read_field(f, 'state_space'))
             for i in range(state_space):
                 model.append(Input.load(f))
-        return QTable(action_space, state_space, model)
+        table = QTable(action_space, state_space, model)
+        table.values = values
+        return table
 
     @staticmethod
     def read_field(f, field_name):
