@@ -57,7 +57,8 @@ class QTable(object):
         a = np.asfarray(self.values)
         np.save(fileName, a)
         with open(fileName + '.inputs', 'w') as f:
-            f.write('Count' + str(len(self.table)) + '\n')
+            f.write('action_space:' + str(len(self.action_space)) + '\n')
+            f.write('state_space:' + str(len(self.state_space)) + '\n')
             for i in self.table:
                 i.save(f)
 
