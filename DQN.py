@@ -354,11 +354,12 @@ if __name__ == "__main__":
     global env
     #env = gym.make("CartPole-v1")
     env = gym.make("FrozenLake-v0")
-    state = env.reset()
    
+    agent = load_frozen_lake_agent(16)
+    play_frozen_lake(agent, n=1000, verbose=3)
     #run()
     #run_DQN_experiments()
-    run_q_table_experiments()
+    #run_frozen_lake_experiments()
 
     env.close()
     sys.exit(0)
