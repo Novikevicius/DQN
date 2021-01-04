@@ -1,3 +1,5 @@
 *.png
 *.txt
+*.npy
+*.inputs
 /experiments/DQN_Agent/models
