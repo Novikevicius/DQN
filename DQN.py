@@ -231,7 +231,6 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         os.mkdir(folder)
 
     print("Running experiment " + str(ID) + ":")
-    gamma = 0.99
     epsilon = 1
     max_exploration_rate = 1
     min_exploration_rate = 0.01
@@ -248,8 +247,6 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         for s in range(max_steps):
             action = choose_action(table, state)
             new_state, reward, done, _ = env.step(action)
-            t1 = table.getValue(state)[action] * (1-lr)
-            t2 = table.getValue(state)[action]
             q_new = table.getValue(state)[action] * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)))
             table.setValue(state, action, q_new)
             state = new_state
@@ -267,12 +264,6 @@ def run_q_table_experiment(ID, epochs=100, lr=0.01):
         results.append(sum(r/result_x_size))
         count += result_x_size
     
-    #table.printNonZeros()
-    #plot(rewards)
-    #play(env, table)
-    print(table)
-    #play(env, table)
-    return ID+1
     with open(fullPathWithExt, 'w') as f:
         f.write("Experiment "     + str(ID)        + ':\n')
         f.write("Epochs: "        + str(epochs)    + '\n')
