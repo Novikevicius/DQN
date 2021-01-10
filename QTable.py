@@ -78,12 +78,16 @@ class QTable(object):
         return tokens[1]
 
 class Input(object):
-    def __init__(self, min, max, step_size, precision=2) -> None:
+    def __init__(self, min, max, step_size, precision=2, index=0, callback=None) -> None:
         self.precision = precision
         self.min = min
         self.max = max
         self.step_size = step_size
-        self.size = int((self.max-self.min) / step_size + 1) + 2 # -inf & +inf
+        self.size = int((self.max-self.min) / step_size + 1) + 1 # -inf & +inf
+        self.index = index
+        self.callback = callback
+        self.indexes = [(self.min + i * self.step_size, 0) for i in range(self.size-1)]
+        self.indexes.append((float('+inf'), 0))
     def split(self, step_size):
         return (self.max - self.min) / step_size
     def map(self, value):
