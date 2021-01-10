@@ -1,14 +1,17 @@
 from os import error
+from tokenize import Number
 import numpy as np
-import math
 
 class QTable(object):
     def __init__(self, action_space, state_space=None, model=None) -> None:
         if model:
             self.table = model
             self.state_space = len(model)
+            for i in range(self.state_space):
+                self.table[i].index = i
+                self.table[i].callback = self.split
         else:
-            self.table = [Input(0, 1, 0.1, 1) for i in range(self.state_space)]
+            self.table = [Input(0, 1, 0.1, 1, index=i, callback=self.split) for i in range(self.state_space)]
             self.state_space = state_space
         self.shape = [self.table[i].size for i in range(self.state_space)]
         self.action_space = action_space
@@ -20,31 +23,30 @@ class QTable(object):
         self.values = np.array([0.0] * self.n)
         self.values = np.reshape(self.values, self.shape)
         
-        
+    def split(self, index, i):
+        self.shape = [self.table[i].size for i in range(index)]
+        self.values = np.insert(self.values, i, np.take(self.values, i, axis=index), axis=index)
     def __str__(self):
         return str(self.values)
-    def getValue(self, state):
+    def getValue(self, state, count_hits=False):
         indexes = []
         for i in range(self.state_space):
             if type(state) is list:
-                indexes.append(self.table[i].map(state[i]))
+                indexes.append(self.table[i].map(state[i], count_hits))
             else:
-                indexes.append(self.table[i].map(state))
+                indexes.append(self.table[i].map(state, count_hits))
         return self.values[tuple(indexes)]
 
     
-    def setValue(self, state, action, value):
+    def setValue(self, state, action, value, count_hits=False):
         indexes = []
         for i in range(self.state_space):
             if type(state) is list:
-                indexes.append(self.table[i].map(state[i]))
+                indexes.append(self.table[i].map(state[i], count_hits))
             else:
-                indexes.append(self.table[i].map(state))
+                indexes.append(self.table[i].map(state, count_hits))
         indexes.append(action)
-        t = self.values[tuple(indexes)]
         self.values[tuple(indexes)] = value
-        t = self.values[tuple(indexes)]
-        t = 0
     
     def save(self, fileName):
         a = np.asfarray(self.values)
