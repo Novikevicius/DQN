@@ -90,12 +90,26 @@ class Input(object):
         self.indexes.append((float('+inf'), 0))
     def split(self, step_size):
         return (self.max - self.min) / step_size
-    def map(self, value):
-        if( value < self.min):
-            return 0
-        if (value > self.max):
-            return self.size-1
-        return math.ceil((round(value, self.precision) - self.min) / self.step_size) + 1
+    def map(self, value, count_hits = False):
+        MIN_HITS_BEFORE_SPLIT = 5
+        for i in range(len(self.indexes)):
+            v, hits = self.indexes[i]
+            if value <= v:
+                self.indexes[i] = (v, hits+1)
+                if i == 0 or i == self.size-1:
+                    mid = self.step_size
+                else:
+                    mid = (v-self.indexes[i-1][0]) / 2
+                if(count_hits and hits+1 >= MIN_HITS_BEFORE_SPLIT):
+                    self.indexes[i] = (v, 0)
+                    if i == self.size-1:
+                        self.indexes.insert(i, (self.indexes[i-1][0]+mid, 0))
+                    else:
+                        self.indexes.insert(i, (v-mid, 0))
+                    self.size += 1
+                    if self.callback:
+                        self.callback(self.index, i)
+                return i
     def __str__(self):
         s = '['
         for i in range(self.size-2):
