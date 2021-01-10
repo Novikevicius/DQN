@@ -31,7 +31,7 @@ class QTable(object):
     def getValue(self, state, count_hits=False):
         indexes = []
         for i in range(self.state_space):
-            if type(state) is list:
+            if type(state) is list or type(state) is np.array or type(state) is np.ndarray:
                 indexes.append(self.table[i].map(state[i], count_hits))
             else:
                 indexes.append(self.table[i].map(state, count_hits))
@@ -41,7 +41,7 @@ class QTable(object):
     def setValue(self, state, action, value, count_hits=False):
         indexes = []
         for i in range(self.state_space):
-            if type(state) is list:
+            if type(state) is list or type(state) is np.array or type(state) is np.ndarray:
                 indexes.append(self.table[i].map(state[i], count_hits))
             else:
                 indexes.append(self.table[i].map(state, count_hits))
