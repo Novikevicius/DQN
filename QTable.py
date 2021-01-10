@@ -31,13 +31,6 @@ class QTable(object):
             else:
                 indexes.append(self.table[i].map(state))
         return self.values[tuple(indexes)]
-        v = self.values
-        for i in range(self.state_space):
-            if type(state) is list:
-                v = v[self.table[i].map(state[i])]
-            else:
-                v = v[self.table[i].map(state)]
-        return v
 
     
     def setValue(self, state, action, value):
