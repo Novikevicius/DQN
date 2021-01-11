@@ -48,10 +48,11 @@ class QTable(object):
         indexes.append(action)
         self.values[tuple(indexes)] = value
     
-    def save(self, fileName):
+    def save(self, fileName, static=True):
         a = np.asfarray(self.values)
         np.save(fileName, a)
         with open(fileName + '.inputs', 'w') as f:
+            f.write('static: ' + str(static) + '\n')
             f.write('action_space: ' + str(self.action_space) + '\n')
             f.write('state_space: ' + str(self.state_space) + '\n')
             for i in self.table:
@@ -80,7 +81,7 @@ class QTable(object):
         return tokens[1]
 
 class Input(object):
-    def __init__(self, min, max, step_size, precision=2, index=0, callback=None) -> None:
+    def __init__(self, min, max, step_size, precision=2, index=0, callback=None, min_hits=25) -> None:
         self.precision = precision
         self.min = min
         self.max = max
@@ -90,19 +91,29 @@ class Input(object):
         self.callback = callback
         self.indexes = [(self.min + i * self.step_size, 0) for i in range(self.size-1)]
         self.indexes.append((float('+inf'), 0))
+        #self.EPSILON = float('0.' + ('0' * (self.precision-1)) +'1')
+        self.EPSILON = 0.01
+        self.min_hits = min_hits
+        
     def split(self, step_size):
         return (self.max - self.min) / step_size
     def map(self, value, count_hits = False):
-        MIN_HITS_BEFORE_SPLIT = 5
         for i in range(len(self.indexes)):
             v, hits = self.indexes[i]
             if value <= v:
                 self.indexes[i] = (v, hits+1)
                 if i == 0 or i == self.size-1:
                     mid = self.step_size
+                    if i == 0:
+                        diff = v - self.indexes[i+1][0]
+                    else:
+                        diff = v - self.indexes[i-1][0]
                 else:
+                    diff = v - self.indexes[i-1][0]
                     mid = (v-self.indexes[i-1][0]) / 2
-                if(count_hits and hits+1 >= MIN_HITS_BEFORE_SPLIT):
+                if abs(diff) < self.EPSILON:
+                        return i
+                if(count_hits and hits+1 >= self.min_hits):
                     self.indexes[i] = (v, 0)
                     if i == self.size-1:
                         self.indexes.insert(i, (self.indexes[i-1][0]+mid, 0))
@@ -123,6 +134,12 @@ class Input(object):
         f.write(str(self.min) + '\n')
         f.write(str(self.max) + '\n')
         f.write(str(self.step_size) + '\n')
+        f.write(str(self.size) + '\n')
+        f.write(str(len(self.indexes)) + '\n')
+        i = 0
+        for (v, hits) in self.indexes:
+            f.write( str(i) + ' ' + str(v) + ' ' + str(hits) + ' ')
+            i += 1
     
     @staticmethod
     def load(file):
