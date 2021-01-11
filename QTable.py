@@ -81,7 +81,7 @@ class QTable(object):
         return tokens[1]
 
 class Input(object):
-    def __init__(self, min, max, step_size, precision=2, index=0, callback=None, min_hits=25) -> None:
+    def __init__(self, min, max, step_size, precision=2, index=0, callback=None, min_hits=25, static=True) -> None:
         self.precision = precision
         self.min = min
         self.max = max
@@ -94,6 +94,7 @@ class Input(object):
         #self.EPSILON = float('0.' + ('0' * (self.precision-1)) +'1')
         self.EPSILON = 0.01
         self.min_hits = min_hits
+        self.static = static
         
     def split(self, step_size):
         return (self.max - self.min) / step_size
@@ -101,6 +102,8 @@ class Input(object):
         for i in range(len(self.indexes)):
             v, hits = self.indexes[i]
             if value <= v:
+                if self.static:
+                    return i
                 self.indexes[i] = (v, hits+1)
                 if i == 0 or i == self.size-1:
                     mid = self.step_size
