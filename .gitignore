@@ -3,4 +3,4 @@
 *.npy
 *.inputs
 Temp.py
-/experiments/DQN_Agent/models
+/experiments/
