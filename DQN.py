@@ -15,15 +15,15 @@ from IPython import display
 import os
 import QTable
 import sys
-
+import Agent
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
 
 def start():
     pass
 
-class DQN_Agent():
-    def __init__(self, env, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None , use_target_network=True):
-        self.env = env
+class DQN_Agent(Agent.Agent):
+    def __init__(self, env_name, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None , use_target_network=True, params=None):
+        super().__init__(env_name)
         self.ID = ID
         self.lr = lr
         self.activation_fn = activation_fn
@@ -34,24 +34,77 @@ class DQN_Agent():
             from keras.models import load_model
             self.agent = load_model(filename)
         else:
-            self.agent = Sequential()
-            self.agent.add(Dense(25, input_shape=env.observation_space.shape, activation='relu'))
-            self.agent.add(Dense(25, activation='relu'))
-            self.agent.add(Dense(env.action_space.n, activation=activation_fn ))        
-            self.agent.compile(loss=loss_fn, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
+            self.params = {'activation':activation_fn, 'loss':loss_fn, 'lr':lr} if params == None else params
+            self.agent = self.createModel()
             
             if self.use_target_network:
                 self.target = keras.models.clone_model(self.agent)
 
-    def train(self, gamma=0.99, epochs=1000, batchSize = 50, file=None):
+                '''
+        #default values
+        self.min_exploration = 0.01
+        self.max_exploration = 1
+        self.exploration_decay = 0.01
+        self.max_steps = 500
+        self.lr = 0.001
+        self.gamma = 0.99
+        self.activation_fn = 'linear'
+        self.loss = 'mse'
+        '''
+        self.min_exploration = 0.01
+        self.max_exploration = 1
+        self.exploration_decay = 0.01
+
+    def summary(self):
+        from io import StringIO
+        stream = StringIO()
+        self.agent.summary(print_fn=lambda s: stream.write(s + '\n'))
+        model_summary = stream.getvalue()
+        stream.close()
+        return super().summary() + ':\n ' + model_summary
+
+    def createTable(self):
+        self.table = QTable.QTable(self.env.action_space.n, model=self.model)
+    
+    def createModel(self):
+        params = self.params
+        lr = self.lr if 'lr' not in params else params['lr']
+        activation_fn = self.activation_fn if 'activation' not in params else params['activation']
+        loss = self.loss if 'loss' not in params else params['loss']
+
+        agent = Sequential()
+        agent.add(Dense(25, input_shape=self.env.observation_space.shape, activation='relu'))
+        agent.add(Dense(25, activation='relu'))
+        agent.add(Dense(self.env.action_space.n, activation=activation_fn ))        
+        agent.compile(loss=loss, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
+        return agent
+    def reset(self):
+        self.createModel()
+    def train(self, gamma=0.99, epochs=1000, batchSize = 50, file=None, params=None):
+        # get required parameters
+        if params:
+            epsilon = 1
+            epochs = params['epochs']
+            min_exploration_rate = self.min_exploration if 'min_expl' not in params else params['min_expl']
+            max_exploration_rate = self.max_exploration if 'max_expl' not in params else params['max_expl']
+            exploration_decay_rate = self.exploration_decay if 'expl_decay' not in params else params['expl_decay']
+            max_steps = self.max_steps if 'max_steps' not in params else params['max_steps']
+        self.epsilon = 1
+        min_exploration_rate = self.min_exploration
+        max_exploration_rate = self.max_exploration
+        exploration_decay_rate = self.exploration_decay
         results = []
-        max_score = 0
         for e in range(epochs):
             done = False
-            score = 0
+            score = 0            
             state = np.array([self.env.reset()])
-            for i in range(500):
-                action = np.argmax(self.agent.predict(state))
+
+            for i in range(500):                
+                if self.epsilon == None or random.uniform(0, 1) > self.epsilon:
+                    #action = np.argmax(self.table.getValue(state))
+                    action = np.argmax(self.agent.predict(state))
+                else:
+                    action = self.env.action_space.sample()
                 new_state, reward, done, _ = self.env.step(action)
                 new_state = np.array([new_state])
 
@@ -61,23 +114,22 @@ class DQN_Agent():
                 state = new_state
 
                 if done:
-                    if score > max_score:
-                        max_score = score
                     if e % 10 == 0:
-                        log_msg = "Epoch: " +  str(e) + ", score" +  str(max_score)
+                        log_msg = "Epoch: " +  str(e) + ", score"# +  str(max_score)
                         if file:
                             file.write(log_msg + '\n')
                         else:
                             print(log_msg)
-                        max_score = 0
                     break
             results.append(score)
             self.replay(batchSize)
             if self.use_target_network and e % 50 == 0 and e != 0:
                 self.target = keras.models.clone_model(self.agent)
+                
+            self.epsilon = self.min_exploration + (self.max_exploration - self.min_exploration) * np.exp(-self.exploration_decay*e)
 
         self.save()
-        return results
+        return results, 1
     def rember(self, s):
         self.memory.append(s)
     def replay(self, gamma=0.99, batch_size=50):
