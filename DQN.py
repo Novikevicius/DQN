@@ -14,8 +14,12 @@ import matplotlib.image as mpimg
 from IPython import display
 import os
 import QTable
+import sys
 
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
+
+def start():
+    pass
 
 class DQN_Agent():
     def __init__(self, env, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None , use_target_network=True):
@@ -446,7 +450,9 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
     return ID+1
 
 if __name__ == "__main__":
-    import sys
+    
+    start()
+    sys.exit(0)
     global env
     env = gym.make("CartPole-v1")
     #env = gym.make("FrozenLake-v0")
