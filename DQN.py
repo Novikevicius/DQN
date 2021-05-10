@@ -66,6 +66,28 @@ class DQN_Agent(Agent.Agent):
     def createTable(self):
         self.table = QTable.QTable(self.env.action_space.n, model=self.model)
     
+    def action(self, state, epsilon=None):
+        state = np.array([state])
+        if epsilon == None or random.uniform(0, 1) > epsilon:
+            action = np.argmax(self.agent.predict(state)[0])
+        else:
+            action = self.env.action_space.sample()
+        return action
+        
+    def evaluate(self, state, action=None):
+        state = np.array([state])
+        if action == None:
+            return self.agent.predict(state)[0]
+        return self.agent.predict(state)[0][action]
+        
+    def updateValue(self, state, action, reward, new_state, done, old_value, new_value):
+        self.memory.append([state, action, reward, new_state, done])
+        return
+        state = np.array([state])
+        s = self.agent.predict(np.array(state))
+        s[0][action] = new_value
+        self.agent.fit(state, s, verbose=0)
+
     def createModel(self):
         params = self.params
         lr = self.lr if 'lr' not in params else params['lr']
@@ -80,6 +102,21 @@ class DQN_Agent(Agent.Agent):
         return agent
     def reset(self):
         self.createModel()
+
+    def onEpisodeEnd(self):
+        self.replay(self.gamma)
+        return
+        gamma = self.gamma
+        batch_size = 50
+        if len(self.memory) < batch_size:
+            return
+        data = random.sample(self.memory, batch_size)
+        for s, a, new_value in data:
+            state = np.array([s])   
+            st = self.agent.predict(np.array(state))
+            st[0][a] = new_value
+            self.agent.fit(state, st, verbose=0)
+        
     def train(self, gamma=0.99, epochs=1000, batchSize = 50, file=None, params=None):
         # get required parameters
         if params:

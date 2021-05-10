@@ -17,16 +17,17 @@ def main():
     qt_exp.run(qt_agent, params={'epochs': 10000, 'lr': 0.5, 'gamma': 0.99, 'reward_function':sum})
     qt_exp.run(qt_agent, params={'epochs': 10000, 'lr': 0.1, 'gamma': 0.99})
 '''
-    
+    '''
     frozen_lake_qt_exp = Experiment(id=9999, agent_name='QT_Agent')
     frozen_lake_qt_agent = QT_Agent('FrozenLake-v0', model=[QTable.Input(0, 15, 1, 1)])
     frozen_lake_qt_exp.run(frozen_lake_qt_agent, params={'epochs': 10000, 'lr': 0.9, 'gamma': 0.99, 'reward_function':max})
     frozen_lake_qt_exp.run(frozen_lake_qt_agent, params={'epochs': 10000, 'lr': 0.05, 'gamma': 0.99})
     '''
+    
     dqn_exp = Experiment(id=9998, agent_name='DQN_Agent')
     dqn_agent = DQN.DQN_Agent('CartPole-v1', 9998, params={'activation':'linear', 'loss':'mse', 'lr':0.01})
     dqn_exp.run(dqn_agent, params={'epochs':1000})
-    '''
+    
 
 
 class Experiment:

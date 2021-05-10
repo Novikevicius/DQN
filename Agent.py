@@ -13,6 +13,7 @@ class Agent(metaclass=ABCMeta):
         self.exploration_decay = 0.01
         self.lr = 0.1
         self.gamma = 0.99
+        self.max_steps = 250
 
     def createEnvironment(self):
         self.env = gym.make(self.env_name)
@@ -33,6 +34,11 @@ class Agent(metaclass=ABCMeta):
     @abstractclassmethod
     def updateValue(self, state, action, old_value, new_value):
         pass
+
+    def onEpisodeStart(self):
+        pass
+    def onEpisodeEnd(self):
+        pass
     
     def train2(self, params):
         self.epsilon = 1
@@ -44,7 +50,9 @@ class Agent(metaclass=ABCMeta):
         exploration_decay_rate = self.exploration_decay if 'expl_decay' not in params else params['expl_decay']
         max_steps = self.max_steps if 'max_steps' not in params else params['max_steps']
         lr = self.lr if 'lr' not in params else params['lr']
+        self.lr = lr
         gamma = self.gamma if 'gamma' not in params else params['gamma']
+        self.gamma = gamma
         sumup_reward_func = sum if 'reward_function' not in params else params['reward_function']
         #sumup_reward_func = max if 'reward_function' not in params else params['reward_function']
         epsilon = 1
@@ -52,6 +60,7 @@ class Agent(metaclass=ABCMeta):
         rewards = []
 
         for e in range(epochs):
+            self.onEpisodeStart()
             state = self.env.reset()
             done = False
             r = 0
@@ -65,7 +74,7 @@ class Agent(metaclass=ABCMeta):
                 q_old = self.evaluate(state, action)
                 q_new = q_old * (1-lr) + lr * (reward + gamma * np.max(self.evaluate(new_state)))
                 # update Q-value
-                self.updateValue(state, action, q_old, q_new)
+                self.updateValue(state, action, reward, new_state, done, q_old, q_new)
                 # move to the next environment state
                 state = new_state
                 # increase total reward for this episode
@@ -75,7 +84,9 @@ class Agent(metaclass=ABCMeta):
                 if done:
                     break
                 
-            r = sumup_reward_func(rewards_per_episode)
+            #r = sumup_reward_func(rewards_per_episode)
+            self.onEpisodeEnd()
+            r = s
             epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
             rewards.append(r)
         
