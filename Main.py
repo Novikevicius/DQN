@@ -8,13 +8,18 @@ import os
 import QTable
 
 def main():
-    #qt_exp = Experiment(id=9999, agent_name='QT_Agent')
-    #qt_agent = QT_Agent('CartPole-v1', model=[QTable.Input(0, 15, 1, 0)])
-    #qt_exp.run(qt_agent, params={'epochs': 10000, 'lr': 0.5, 'gamma': 0.99})
-    #qt_exp.run(qt_agent, params={'epochs': 10000, 'lr': 0.1, 'gamma': 0.99})
+    qt_exp = Experiment(id=9999, agent_name='QT_Agent')
+    qt_agent = QT_Agent('CartPole-v1', model=[QTable.Input(-1, 1, 0.1, 4), 
+             QTable.Input(-1, 1, 0.1, 4),
+             QTable.Input(-1, 1, 0.1, 4),
+             QTable.Input(-1, 1, 0.1, 4)])
+    qt_exp.run(qt_agent, params={'epochs': 10000, 'lr': 0.5, 'gamma': 0.99})
+    qt_exp.run(qt_agent, params={'epochs': 10000, 'lr': 0.1, 'gamma': 0.99})
+    '''
     dqn_exp = Experiment(id=9998, agent_name='DQN_Agent')
     dqn_agent = DQN.DQN_Agent('CartPole-v1', 9998, params={'activation':'linear', 'loss':'mse', 'lr':0.01})
     dqn_exp.run(dqn_agent, params={'epochs':1000})
+    '''
 
 
 class Experiment:
@@ -53,7 +58,8 @@ class Experiment:
             f.write(agent.summary())
 
             agent.reset()
-            results, x_scale = agent.train(params)
+            #results, x_scale = agent.train(params)
+            results, x_scale = agent.train2(params)
             
             DQN.plot(results, self.fullPath, self.id, [i * x_scale for i in range(len(results))])
             f.write("Final score: " + str(results[len(results)-1]) + '\n')
