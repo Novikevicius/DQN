@@ -37,6 +37,8 @@ class Agent(metaclass=ABCMeta):
     def train2(self, params):
         self.epsilon = 1
         epochs = params['epochs']
+        result_x_size = round(epochs * 0.1) if 'x_size' not in params else params['x_size']
+        result_x_size = 1 if result_x_size == 0 else result_x_size
         min_exploration_rate = self.min_exploration if 'min_expl' not in params else params['min_expl']
         max_exploration_rate = self.max_exploration if 'max_expl' not in params else params['max_expl']
         exploration_decay_rate = self.exploration_decay if 'expl_decay' not in params else params['expl_decay']
@@ -46,8 +48,6 @@ class Agent(metaclass=ABCMeta):
         epsilon = 1
 
         rewards = []
-        result_x_size = round(epochs * 0.1)
-        result_x_size = 1 if result_x_size == 0 else result_x_size
 
         for e in range(epochs):
             state = self.env.reset()
