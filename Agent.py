@@ -45,6 +45,8 @@ class Agent(metaclass=ABCMeta):
         max_steps = self.max_steps if 'max_steps' not in params else params['max_steps']
         lr = self.lr if 'lr' not in params else params['lr']
         gamma = self.gamma if 'gamma' not in params else params['gamma']
+        sumup_reward_func = sum if 'reward_function' not in params else params['reward_function']
+        #sumup_reward_func = max if 'reward_function' not in params else params['reward_function']
         epsilon = 1
 
         rewards = []
@@ -53,6 +55,7 @@ class Agent(metaclass=ABCMeta):
             state = self.env.reset()
             done = False
             r = 0
+            rewards_per_episode = []
             for s in range(max_steps):
                 # choose an action for given state using epsilon-greedy approach
                 action = self.action(state, epsilon)
@@ -66,10 +69,13 @@ class Agent(metaclass=ABCMeta):
                 # move to the next environment state
                 state = new_state
                 # increase total reward for this episode
+                rewards_per_episode.append(reward)
                 r += reward
 
                 if done:
                     break
+                
+            r = sumup_reward_func(rewards_per_episode)
             epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
             rewards.append(r)
         
