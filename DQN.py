@@ -29,7 +29,7 @@ class DQN_Agent(Agent.Agent):
         self.activation_fn = activation_fn
         self.loss_fn = loss_fn
         self.use_target_network = use_target_network
-        self.memory = deque(maxlen=500)
+        self.memory = deque(maxlen=100000)
         if filename:
             from keras.models import load_model
             self.agent = load_model(filename)
@@ -96,6 +96,9 @@ class DQN_Agent(Agent.Agent):
 
         agent = Sequential()
         agent.add(Dense(25, input_shape=self.env.observation_space.shape, activation='relu'))
+        agent.add(Dense(50, activation='relu'))
+        agent.add(Dense(100, activation='relu'))
+        agent.add(Dense(50, activation='relu'))
         agent.add(Dense(25, activation='relu'))
         agent.add(Dense(self.env.action_space.n, activation=activation_fn ))        
         agent.compile(loss=loss, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
@@ -169,21 +172,24 @@ class DQN_Agent(Agent.Agent):
         return results, 1
     def rember(self, s):
         self.memory.append(s)
-    def replay(self, gamma=0.99, batch_size=50):
-        if len(self.memory) < batch_size:
-            return
-        data = random.sample(self.memory, batch_size)
+    def replay(self, gamma=0.99, batch_size=256):
+
+        data = random.sample(self.memory, min(len(self.memory), batch_size))
+        xs = []
+        ys = []
         for s, a, r, s_new, done in data:
             target = r
             if not done:
                 if self.use_target_network:
-                    prediction = self.target.predict(s_new)
+                    prediction = self.target.predict(np.array([s_new]))
                 else:
-                    prediction = self.agent.predict(s_new)
+                    prediction = self.agent.predict(np.array([s_new]))
                 target = r + gamma * np.max(prediction[0])
-            T_s = self.agent.predict(np.array(s))
+            T_s = self.agent.predict(np.array([s]))
             T_s[0][a] = target
-            self.agent.fit(s, T_s, verbose=0)
+            xs.append(s)
+            ys.append(T_s[0])
+        self.agent.fit(np.array(xs), np.array(ys), batch_size=len(xs), verbose=0)
 
     def save(self, filename=None):
         if filename == None:
