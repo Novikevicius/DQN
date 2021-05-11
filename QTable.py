@@ -129,9 +129,16 @@ class Input(object):
     def __str__(self):
         s = '['
         for i in range(self.size-2):
-            s += str(self.values[i]) + ', '
-        s += str(self.values[self.size-1]) + ']'
+            s += str(self.indexes[i]) + ', '
+        s += str(self.indexes[self.size-1]) + ']'
         return s
+    def get_intervals(self):
+        s = [float('-inf')]
+        for i in range(self.size-2):
+            s.append(self.indexes[i][0])
+        s.append(float('+inf'))
+        return s
+
     def save(self, f):
         f.write(str(self.precision) + '\n')
         f.write(str(self.min) + '\n')
