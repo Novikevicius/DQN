@@ -28,6 +28,11 @@ class QTable(object):
         self.values = np.insert(self.values, i, np.take(self.values, i, axis=index), axis=index)
     def __str__(self):
         return str(self.values)
+    def get_intervals(self):
+        intervals = []
+        for input in self.table:
+            intervals.append(input.get_intervals())
+        return intervals
     def getValue(self, state, count_hits=False):
         indexes = []
         for i in range(self.state_space):
