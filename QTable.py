@@ -44,12 +44,22 @@ class QTable(object):
 
     
     def setValue(self, state, action, value, count_hits=False):
+        count_hits = count_hits or self.dynamic
         indexes = []
         for i in range(self.state_space):
             if type(state) is list or type(state) is np.array or type(state) is np.ndarray:
-                indexes.append(self.table[i].map(state[i], count_hits))
+                indexes.append(self.table[i].map(state[i], False))
             else:
-                indexes.append(self.table[i].map(state, count_hits))
+                indexes.append(self.table[i].map(state, False))
+        indexes.append(action)
+        self.values[tuple(indexes)] = value
+        # split intervals
+        if self.dynamic:
+            for i in range(self.state_space):
+                if type(state) is list or type(state) is np.array or type(state) is np.ndarray:
+                    indexes.append(self.table[i].map(state[i], count_hits))
+                else:
+                    indexes.append(self.table[i].map(state, count_hits))
         indexes.append(action)
         self.values[tuple(indexes)] = value
     
