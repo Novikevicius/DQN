@@ -86,7 +86,7 @@ class Input(object):
         self.min = min
         self.max = max
         self.step_size = step_size
-        self.size = int((self.max-self.min) / step_size + 1) + 1 # -inf & +inf
+        self.size = int((self.max-self.min+1) / step_size + 1) + 1 # -inf & +inf
         self.index = index
         self.callback = callback
         self.indexes = [(self.min + i * self.step_size, 0) for i in range(self.size-1)]
