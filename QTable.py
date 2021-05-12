@@ -3,7 +3,7 @@ from tokenize import Number
 import numpy as np
 
 class QTable(object):
-    def __init__(self, action_space, state_space=None, model=None) -> None:
+    def __init__(self, action_space, state_space=None, model=None, dynamic=False) -> None:
         if model:
             self.table = model
             self.state_space = len(model)
@@ -22,6 +22,7 @@ class QTable(object):
             self.n *= self.table[i].size
         self.values = np.array([0.0] * self.n)
         self.values = np.reshape(self.values, self.shape)
+        self.dynamic = dynamic
         
     def split(self, index, i):
         self.shape = [self.table[i].size for i in range(index)]
@@ -52,16 +53,21 @@ class QTable(object):
             else:
                 indexes.append(self.table[i].map(state, False))
         indexes.append(action)
+
+        # check if we actually need to split?
+        diff = abs(value-self.values[tuple(indexes)])
+        split = diff > 0.01
+        if(split):
+            print("Split:", indexes)
+
         self.values[tuple(indexes)] = value
         # split intervals
         if self.dynamic:
             for i in range(self.state_space):
                 if type(state) is list or type(state) is np.array or type(state) is np.ndarray:
-                    indexes.append(self.table[i].map(state[i], count_hits))
+                    indexes.append(self.table[i].map(state[i], count_hits, split))
                 else:
-                    indexes.append(self.table[i].map(state, count_hits))
-        indexes.append(action)
-        self.values[tuple(indexes)] = value
+                    indexes.append(self.table[i].map(state, count_hits, split))
     
     def save(self, fileName, static=True):
         a = np.asfarray(self.values)
@@ -107,13 +113,14 @@ class Input(object):
         self.indexes = [(self.min + i * self.step_size, 0) for i in range(self.size-1)]
         self.indexes.append((float('+inf'), 0))
         #self.EPSILON = float('0.' + ('0' * (self.precision-1)) +'1')
-        self.EPSILON = 0.01
-        self.min_hits = min_hits
+        self.EPSILON = 0.1
+        #self.min_hits = min_hits
+        self.min_hits = 1
         self.static = static
         
     def split(self, step_size):
         return (self.max - self.min) / step_size
-    def map(self, value, count_hits = False):
+    def map(self, value, count_hits = False, split=True):
         for i in range(len(self.indexes)):
             v, hits = self.indexes[i]
             if value <= v:
@@ -129,7 +136,7 @@ class Input(object):
                 else:
                     diff = v - self.indexes[i-1][0]
                     mid = (v-self.indexes[i-1][0]) / 2
-                if abs(diff) < self.EPSILON:
+                if abs(diff) < self.EPSILON or not split:
                         return i
                 if(count_hits and hits+1 >= self.min_hits):
                     self.indexes[i] = (v, 0)

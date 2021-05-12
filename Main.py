@@ -1,3 +1,4 @@
+from collections import deque
 from Agent import QT_Agent
 import DQN
 from QTable import *
@@ -5,14 +6,99 @@ from QTable import *
 from functools import *
 from datetime import datetime
 import os
+import random
 
-import QTable
+import gym
 
 def main():
+
+
     input = Input(-1, 1, 1, 0.1, static=False)
-    r = input.map(0)
+    print(input.get_intervals(),'\n')
+
+    r = input.map(0, count_hits=False)
     print(input, r)
-    print(input.get_intervals())
+    print(input.get_intervals(), '\n')
+
+    r = input.map(0, count_hits=True)
+    print(input, r)
+    print(input.get_intervals(), '\n')
+
+    
+    table = QTable(2, model=[Input(-1, 1, 1, 0.1, static=False)], dynamic=True)
+    print(table, '\n')
+    print(table.get_intervals(), '\n')
+
+    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
+    print(table, '\n')
+    print(table.get_intervals(), '\n')
+
+    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
+    print(table, '\n')
+    print(table.get_intervals(), '\n')
+    
+    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
+    print(table, '\n')
+    print(table.get_intervals(), '\n')
+    
+    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
+    print(table, '\n')
+    print(table.get_intervals(), '\n')
+
+    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
+    print(table, '\n')
+    print(table.get_intervals(), '\n')
+
+    table = QTable(2, model=[Input(-0.1, 0.1, 0.1, 4, static=False), Input(-0.1, 0.1, 0.1, 4, static=False), Input(-0.1, 0.1, 0.1, 4, static=False), Input(-0.1, 0.1, 0.1, 4, static=False)], dynamic=True)
+    env = gym.make("CartPole-v0")
+    epochs = 50000
+    min_exploration_rate = 0.1
+    max_exploration_rate = 1
+    exploration_decay_rate = 0.01
+    epsilon = 1
+
+    result_x_size = 1000
+
+    lr = 0.01
+    gamma = 0.9
+
+    rewards = []
+    for e in range(epochs):
+        state = env.reset()
+        for s in range(500):
+            if random.uniform(0, 1) > epsilon:
+                action = np.argmax(table.getValue(state))
+            else:
+                action = env.action_space.sample()
+            new_state, reward, done, _ = env.step(action)
+            
+            q_old = table.getValue(state)[action]
+            q_new = q_old * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)[action]))
+            table.setValue(state, action, q_new)
+
+            state = new_state
+            if done:
+                break
+        epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
+        print("E:", e, "score:", s, "epsilon:", epsilon)
+        rewards.append(s)
+
+    count = 0
+    rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
+    count = result_x_size
+
+    results = [] # average rewards per result_x_size episodes
+    for r in rewards_per_x_episodes:
+        results.append(sum(r/result_x_size))
+        count += result_x_size
+    xs =[i * result_x_size for i in range(len(results))]
+    DQN.plot(results, 'DQTable_12', 12,xs=xs)
+    max_r = np.argmax(results)
+    print(table, '\n')
+    print(table.get_intervals(), '\n')
+    print("Max", results[max_r], "after", max_r+1, "epochs")
+    print("Final", results[len(results)-1])
+    print("Table size", table.n)
     '''
     qt_exp = Experiment(id=9999, agent_name='QT_Agent')
     qt_agent = QT_Agent('CartPole-v1', model=[QTable.Input(-1, 1, 0.1, 4), 
@@ -33,7 +119,6 @@ def main():
     dqn_agent = DQN.DQN_Agent('CartPole-v1', 9998, params={'activation':'linear', 'loss':'mse', 'lr':0.01})
     dqn_exp.run(dqn_agent, params={'epochs':1000})
     '''
-    Input
     
 
 
