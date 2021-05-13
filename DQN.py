@@ -223,7 +223,7 @@ def plot(results, saveFolder=None, ID=0, xs=None, x_size=None, max_score=None, m
     if x_size == 1:
         plt.title("Surenkamų taškų skaičius per epochą")
     else:
-    plt.title("Vidutinis surenkamų taškų skaičius" if x_size == None else "Paskutinių {0} epochų taškų skaičius".format(x_size))
+        plt.title("Vidutinis surenkamų taškų skaičius" if x_size == None else "Paskutinių {0} epochų taškų skaičius".format(x_size))
     plt.xlabel('Epochų skaičius')
     plt.ylabel('Taškai')
     if not xs:
