@@ -452,6 +452,7 @@ def run_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=1
                 break
         epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
         rewards.append(r)
+        print("E:", e, "score:", s, "epsilon:", epsilon)
     
     rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
     count = result_x_size
