@@ -179,6 +179,7 @@ class DQN_Agent(Agent.Agent):
                 self.target = keras.models.clone_model(self.agent)
                 
             self.epsilon = self.min_exploration + (self.max_exploration - self.min_exploration) * np.exp(-self.exploration_decay*e)
+        print("E:", e, "score:", i, "epsilon:", epsilon)
 
         self.save()
         return results, 1
@@ -341,8 +342,8 @@ def run_DQN_CartPole_experiment(ID, epochs=500, lr=0.001, gamma=0.90, activation
 
 def run_QT_frozen_lake_experiments():
     global MODELS_FOLDER
-    MODELS_FOLDER = 'experiments/Q_Table/FrozenLake/models/'
-    experiment_ID_file = 'experiments/Q_Table/FrozenLake/exp_ID.txt'
+    MODELS_FOLDER = 'experiments/Q_Table/{0}/models/'.format(FROZENLAKE_ENV_NAME)
+    experiment_ID_file = 'experiments/Q_Table/{0}/exp_ID.txt'.format(FROZENLAKE_ENV_NAME)
     if os.path.exists(experiment_ID_file):
         with open(experiment_ID_file, 'r+') as f:
             ID = int(f.readline())
@@ -350,7 +351,7 @@ def run_QT_frozen_lake_experiments():
     else:
         ID = 0
     global env    
-    env = gym.make("FrozenLake-v0")
+    env = gym.make(FROZENLAKE_ENV_NAME)
     ID = run_QT_frozen_lake_experiment(ID, epochs=10000, lr=0.01, gamma=0.99, result_x_size=1000)
     ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
     ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
@@ -438,6 +439,8 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
     table = QTable.QTable(env.action_space.n, model=model)
     rewards = []
     max_steps = 200
+    max_score = 0
+    max_score_after = 0
     for e in range(epochs):
         state = env.reset()
         done = False
@@ -455,7 +458,13 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
                 break
         epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
         rewards.append(r)
+        if max_score < r:
+            max_score = r
+            max_score_after = e
+        print("E:", e, "score:", s, "epsilon:", epsilon)
     
+    max_score = None if max_score == 0 else max_score
+    max_score_after = None if max_score == None else max_score_after
     rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
     count = result_x_size
 
@@ -471,9 +480,11 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
         f.write("Gamma: "         + str(gamma)     + '\n')
         f.write("Last Reward: "   + str(rewards[len(rewards)-1])     + '\n')
 
-        plot(results, fullPath, ID, xs=[i for i in range(result_x_size, epochs+1, result_x_size)])
+        plot(results, fullPath, ID, xs=[i for i in range(result_x_size, epochs+1, result_x_size)], x_size=result_x_size, max_score=max_score, max_score_after=max_score_after, lr=lr)
+        f.write("Max score: " + str(max_score) + " after " + str(max_score_after) + '\n')
         f.write("Final score: " + str(results[len(results)-1]) + '\n')
         print("Final score: " + str(results[len(results)-1]))
+        print("Max score: " + str(max_score) + " after " + str(max_score_after) + '\n')
     table.save(MODELS_FOLDER+str(ID))
     return ID+1
 
@@ -486,9 +497,9 @@ def run_QT_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_siz
         return action
     global env
     experiments_folder = 'experiments'
-    agent_folder    = 'Q_Table/CartPole'
+    agent_folder    = 'Q_Table/{0}'.format(CARTPOLE_ENV_NAME)
     folder          = experiments_folder + '/' + agent_folder
-    file            = 'CartPole_'+str(ID)
+    file            = '{0}_{1}'.format(CARTPOLE_ENV_NAME, ID)
     fullPath        = folder + '/' + file
     fullPathWithExt = fullPath + '.txt'
 
@@ -521,8 +532,9 @@ def run_QT_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_siz
             table.setValue(state, action, q_new)
             #table.setValue(state, action, q_new, e < 100)
             state = new_state
-            r += reward
+            #r += reward
             if done:
+                r = s
                 break
         epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
         rewards.append(r)
