@@ -219,12 +219,17 @@ class DQN_Agent(Agent.Agent):
             print("Epoch:", e, "score", score)
         print("Max score", max_score)
 
-def plot(results, saveFolder=None, ID=0, xs=None):
-    plt.title("Score per episode")
+def plot(results, saveFolder=None, ID=0, xs=None, x_size=None, max_score=None, max_score_after=None, lr=None):
+    plt.title("Vidutinis surenkamų taškų skaičius" if x_size == None else "Paskutinių {0} epochų taškų skaičius".format(x_size))
+    plt.xlabel('Epochų skaičius')
+    plt.ylabel('Taškai')
     if not xs:
         plt.plot(results)
     else:
         plt.plot(xs, results)
+    if not (max_score == None):
+        plt.axvline(max_score_after, ymax=max_score, color="r", linestyle="--")
+        plt.legend(["Vidutinis taškų skaičius" if lr == None else 'Mokymo greitis {0}'.format(lr) , "Maksimalus tikslas pasiektas po {0} epochų".format(max_score_after)], loc ="lower right")
     if saveFolder:
         plt.savefig(saveFolder)
     else:
