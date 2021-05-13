@@ -115,6 +115,7 @@ class DQN_Agent(Agent.Agent):
         agent.add(Dense(self.env.action_space.n, activation=activation_fn ))        
         agent.compile(loss=loss, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
         return agent
+    
     def reset(self):
         self.createModel()
 
@@ -419,9 +420,9 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
             action = env.action_space.sample()
         return action
     experiments_folder = 'experiments'
-    agent_folder    = 'Q_Table/FrozenLake'
+    agent_folder    = 'Q_Table/{0}'.format(FROZENLAKE_ENV_NAME)
     folder          = experiments_folder + '/' + agent_folder
-    file            = 'FrozenLake_'+str(ID)
+    file            = '{0}_{1}'.format(FROZENLAKE_ENV_NAME, ID)
     fullPath        = folder + '/' + file
     fullPathWithExt = fullPath + '.txt'
 
