@@ -17,9 +17,20 @@ import QTable
 import sys
 import Agent
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
+CARTPOLE_ENV_NAME = "CartPole-v0"
+FROZENLAKE_ENV_NAME = "FrozenLake-v0"
 
 def start():
-    run_cartpole_experiments()
+    #DQT experiments
+    run_DQT_cartpole_experiments()
+
+    #DQN experiments
+    #run_DQN_frozenlake_experiments()
+    #run_DQN_cartpole_experiments()
+
+    #QT experiments
+    #run_QT_frozen_lake_experiments()
+    #run_QT_cartpole_experiments()
     pass
 
 class DQN_Agent(Agent.Agent):
@@ -269,17 +280,17 @@ def run():
         if command=='s':
             plot(r, MODELS_FOLDER + str(ID), ID)
         if command=='e':
-            run_DQN_experiments()
+            run_DQN_cartpole_experiments()
         if command=='l':
             import tkinter as tk
             from tkinter import filedialog
             file_path = filedialog.askopenfilename(initialdir=MODELS_FOLDER, title="Pasirinkite agento modeli")
             agent = DQN_Agent(env, ID=999, filename=file_path)
-def run_DQN_experiments():
-    global env
+
+def run_DQN_cartpole_experiments():
     global MODELS_FOLDER
-    MODELS_FOLDER = 'experiments/DQN_Agent/models/'
-    experiment_ID_file = 'experiments/DQN_Agent/exp_ID.txt'
+    MODELS_FOLDER = 'experiments/DQN_Agent/{0}/models/'.format(CARTPOLE_ENV_NAME)
+    experiment_ID_file = 'experiments/DQN_Agent/{0}/exp_ID.txt'.format(CARTPOLE_ENV_NAME)
     if os.path.exists(experiment_ID_file):
         with open(experiment_ID_file, 'r+') as f:
             ID = int(f.readline())
@@ -287,17 +298,48 @@ def run_DQN_experiments():
     else:
         ID = 0
 
-    #ID = run_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
-    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
-    #ID = run_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
-    #ID = run_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
-    ID = run_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
+    ID = run_DQN_CartPole_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
 
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
         f.close()
-    
-def run_frozen_lake_experiments():
+
+def run_DQN_frozenlake_experiments():
+    global MODELS_FOLDER
+    MODELS_FOLDER = 'experiments/DQN_Agent/{0}/models/'.format(FROZENLAKE_ENV_NAME)
+    experiment_ID_file = 'experiments/DQN_Agent/{0}/exp_ID.txt'.format(FROZENLAKE_ENV_NAME)
+    if os.path.exists(experiment_ID_file):
+        with open(experiment_ID_file, 'r+') as f:
+            ID = int(f.readline())
+            f.close()
+    else:
+        ID = 0
+
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
+    ID = run_DQN_FrozenLake_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
+    ID = run_DQN_FrozenLake_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
+
+    with open(experiment_ID_file, 'w') as f:
+        f.write(str(ID)+'\n')
+        f.close()
+
+def run_DQN_FrozenLake_experiment(ID, epochs=500, lr=0.001, gamma=0.90, activation='linear', loss='mse'):
+    global env
+    env = gym.make(FROZENLAKE_ENV_NAME)
+    run_experiment(ID, epochs, lr, gamma, activation, loss, FROZENLAKE_ENV_NAME)
+
+def run_DQN_CartPole_experiment(ID, epochs=500, lr=0.001, gamma=0.90, activation='linear', loss='mse'):
+    global env
+    env = gym.make(CARTPOLE_ENV_NAME)
+    run_experiment(ID, epochs, lr, gamma, activation, loss, CARTPOLE_ENV_NAME)
+
+def run_QT_frozen_lake_experiments():
     global MODELS_FOLDER
     MODELS_FOLDER = 'experiments/Q_Table/FrozenLake/models/'
     experiment_ID_file = 'experiments/Q_Table/FrozenLake/exp_ID.txt'
@@ -309,18 +351,19 @@ def run_frozen_lake_experiments():
         ID = 0
     global env    
     env = gym.make("FrozenLake-v0")
-    ID = run_frozen_lake_experiment(ID, epochs=10000, lr=0.01, gamma=0.99, result_x_size=1000)
-    ID = run_frozen_lake_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
-    ID = run_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
-    ID = run_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
-    ID = run_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    ID = run_QT_frozen_lake_experiment(ID, epochs=10000, lr=0.01, gamma=0.99, result_x_size=1000)
+    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
+    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
         f.close()
-def run_cartpole_experiments():
+
+def run_QT_cartpole_experiments():
     global MODELS_FOLDER
-    MODELS_FOLDER = 'experiments/Q_Table/CartPole/models/'
-    experiment_ID_file = 'experiments/Q_Table/CartPole/exp_ID.txt'
+    MODELS_FOLDER = 'experiments/Q_Table/{0}/models/'.format(CARTPOLE_ENV_NAME)
+    experiment_ID_file = 'experiments/Q_Table/{0}/exp_ID.txt'.format(CARTPOLE_ENV_NAME)
     if os.path.exists(experiment_ID_file):
         with open(experiment_ID_file, 'r+') as f:
             ID = int(f.readline())
@@ -328,9 +371,9 @@ def run_cartpole_experiments():
     else:
         ID = 0
     global env
-    env = gym.make("CartPole-v0")
-    ID = run_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=1000)
-    ID = run_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=1000)
+    env = gym.make(CARTPOLE_ENV_NAME)
+    ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=1000)
+    ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
@@ -338,10 +381,11 @@ def run_cartpole_experiments():
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
         f.close()
+
 def run_DQT_cartpole_experiments():
     global MODELS_FOLDER
-    MODELS_FOLDER = 'experiments/DQT/CartPole/models/'
-    experiment_ID_file = 'experiments/DQT/CartPole/exp_ID.txt'
+    MODELS_FOLDER = 'experiments/DQT/{0}/models/'.format(CARTPOLE_ENV_NAME)
+    experiment_ID_file = 'experiments/DQT/{0}/exp_ID.txt'.format(CARTPOLE_ENV_NAME)
     if os.path.exists(experiment_ID_file):
         with open(experiment_ID_file, 'r+') as f:
             ID = int(f.readline())
@@ -349,14 +393,14 @@ def run_DQT_cartpole_experiments():
     else:
         ID = 0
     global env
-    env = gym.make("CartPole-v0")
+    env = gym.make(CARTPOLE_ENV_NAME)
     model = [QTable.Input(-0.1, 0.1, 0.1, 4, static=False),
             QTable.Input(-0.1, 0.1, 0.1, 4, static=False),
             QTable.Input(-0.1, 0.1, 0.1, 4, static=False),
             QTable.Input(-0.1, 0.1, 0.1, 4, static=False),]
-    ID = run_dqt_cartpole_experiment(ID, epochs=10000, lr=0.1,  gamma=0.99, result_x_size=100)
-    ID = run_dqt_cartpole_experiment(ID, epochs=10000, lr=0.5,  gamma=0.99, result_x_size=100)
-    ID = run_dqt_cartpole_experiment(ID, epochs=10000, lr=0.7,  gamma=0.99, result_x_size=100)
+    ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.1,  gamma=0.99, result_x_size=100)
+    ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=100)
+    ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=100)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
@@ -364,7 +408,8 @@ def run_DQT_cartpole_experiments():
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
         f.close()
-def run_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100):
+
+def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100):
     global env
     def choose_action(table, state):
         if random.uniform(0, 1) > epsilon:
@@ -432,7 +477,7 @@ def run_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_siz
     table.save(MODELS_FOLDER+str(ID))
     return ID+1
 
-def run_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100):
+def run_QT_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100):
     def choose_action(table, state):
         if random.uniform(0, 1) > epsilon:
             action = np.argmax(table.getValue(state))
@@ -503,6 +548,7 @@ def run_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=1
         print("Final score: " + str(results[len(results)-1]))
     table.save(MODELS_FOLDER+str(ID))
     return ID+1
+
 def run_dqt_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100, model=None):
     def choose_action(table, state):
         if random.uniform(0, 1) > epsilon:
@@ -512,9 +558,9 @@ def run_dqt_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_si
         return action
     global env
     experiments_folder = 'experiments'
-    agent_folder    = 'DQT/CartPole'
+    agent_folder    = 'DQT/{0}'.format(CARTPOLE_ENV_NAME)
     folder          = experiments_folder + '/' + agent_folder
-    file            = 'CartPole_'+str(ID)
+    file            = '{0}_'.format(CARTPOLE_ENV_NAME)+str(ID)
     fullPath        = folder + '/' + file
     fullPathWithExt = fullPath + '.txt'
 
@@ -586,6 +632,7 @@ def run_dqt_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_si
         print("Results saved to", fullPathWithExt)
     table.save(MODELS_FOLDER+str(ID))
     return ID+1
+
 def load_frozen_lake_agent(ID):
     global MODELS_FOLDER
     MODELS_FOLDER = 'experiments/Q_Table/FrozenLake/models/'
@@ -593,7 +640,7 @@ def load_frozen_lake_agent(ID):
 
 def play_frozen_lake(table, n=1, verbose=0):
     # verbose 0 - no priniting, with visualization, 1 - only printing, 2 - print and plot graph, 3 - only plot graph
-    env = gym.make("FrozenLake-v0")
+    env = gym.make(FROZENLAKE_ENV_NAME)
     epsilon = 1
     rewards = []
     def choose_action(table, state):
@@ -629,12 +676,12 @@ def play_frozen_lake(table, n=1, verbose=0):
         plot(rewards)
     return rewards
     
-def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', loss='mse'):
+def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', loss='mse', env_name=None):
     global env
     experiments_folder = 'experiments'
-    agent_folder    = 'DQN_Agent'
+    agent_folder    = 'DQN_Agent/{0}'.format(env_name)
     folder          = experiments_folder + '/' + agent_folder
-    file            = str(ID)
+    file            = '{0}_'.format(env_name)+str(ID)
     fullPath        = folder + '/' + file
     fullPathWithExt = fullPath + '.txt'
 
@@ -644,7 +691,7 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
         os.mkdir(folder)
 
     agent = DQN_Agent(env, ID, lr, activation, loss)
-    print("Running experiment " + str(ID) + ":")
+    print("Running experiment {0} ID:{1}:".format(env_name, ID))
     with open(fullPathWithExt, 'w') as f:
         f.write("Experiment "     + str(ID)     + ':\n')
         f.write("Epochs: "        + str(epochs) + '\n')
@@ -693,9 +740,9 @@ if __name__ == "__main__":
     #play_frozen_lake(agent, n=1000, verbose=3)
     #run()
     #run_DQN_experiments()
-    #run_frozen_lake_experiments()
-    run_cartpole_experiments()
-    #run_cartpole_experiments()
+    #run_QT_frozen_lake_experiments()
+    #run_QT_cartpole_experiments()
+    #run_QT_cartpole_experiments()
 
     env.close()
     sys.exit(0)
