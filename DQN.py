@@ -19,6 +19,7 @@ import Agent
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
 
 def start():
+    run_cartpole_experiments()
     pass
 
 class DQN_Agent(Agent.Agent):
@@ -420,12 +421,12 @@ def run_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=1
     print("Running experiment " + str(ID) + ":")
     epsilon = 1
     max_exploration_rate = 1
-    min_exploration_rate = 0.01
+    min_exploration_rate = 0.1
     exploration_decay_rate = 0.01
-    model = [QTable.Input(-1, 1, 0.1, 4), 
-             QTable.Input(-1, 1, 0.1, 4),
-             QTable.Input(-1, 1, 0.1, 4),
-             QTable.Input(-1, 1, 0.1, 4)]
+    model = [QTable.Input(-1, 1, 0.1, 4, static=True), 
+             QTable.Input(-1, 1, 0.1, 4, static=True),
+             QTable.Input(-1, 1, 0.1, 4, static=True),
+             QTable.Input(-1, 1, 0.1, 4, static=True)]
     import DQTable as dqt
     table = dqt.DQTable(env.action_space.n, model=model)
     rewards = []

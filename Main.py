@@ -11,47 +11,16 @@ import random
 import gym
 
 def main():
+    model = [Input(-1, 1, 0.1, 4, static=False), 
+             Input(-1, 1, 0.1, 4, static=False),
+             Input(-1, 1, 0.1, 4, static=False),
+             Input(-1, 1, 0.1, 4, static=False)]
+    import DQTable as dqt
+    #table = dqt.DQTable(2, model=model)
 
-
-    input = Input(-1, 1, 1, 0.1, static=False)
-    print(input.get_intervals(),'\n')
-
-    r = input.map(0, count_hits=False)
-    print(input, r)
-    print(input.get_intervals(), '\n')
-
-    r = input.map(0, count_hits=True)
-    print(input, r)
-    print(input.get_intervals(), '\n')
-
-    
-    table = QTable(2, model=[Input(-1, 1, 1, 0.1, static=False)], dynamic=True)
-    print(table, '\n')
-    print(table.get_intervals(), '\n')
-
-    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
-    print(table, '\n')
-    print(table.get_intervals(), '\n')
-
-    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
-    print(table, '\n')
-    print(table.get_intervals(), '\n')
-    
-    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
-    print(table, '\n')
-    print(table.get_intervals(), '\n')
-    
-    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
-    print(table, '\n')
-    print(table.get_intervals(), '\n')
-
-    table.setValue(-0.5, 0, table.getValue(-0.5)[0]+0.1)
-    print(table, '\n')
-    print(table.get_intervals(), '\n')
-
-    table = QTable(2, model=[Input(-0.1, 0.1, 0.1, 4, static=False), Input(-0.1, 0.1, 0.1, 4, static=False), Input(-0.1, 0.1, 0.1, 4, static=False), Input(-0.1, 0.1, 0.1, 4, static=False)], dynamic=True)
+    table = QTable(2, model=model, dynamic=True)
     env = gym.make("CartPole-v0")
-    epochs = 50000
+    epochs = 100000
     min_exploration_rate = 0.1
     max_exploration_rate = 1
     exploration_decay_rate = 0.01
@@ -59,8 +28,8 @@ def main():
 
     result_x_size = 1000
 
-    lr = 0.01
-    gamma = 0.9
+    lr = 0.05
+    gamma = 0.99
 
     rewards = []
     for e in range(epochs):
@@ -73,7 +42,7 @@ def main():
             new_state, reward, done, _ = env.step(action)
             
             q_old = table.getValue(state)[action]
-            q_new = q_old * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)[action]))
+            q_new = q_old * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)))
             table.setValue(state, action, q_new)
 
             state = new_state

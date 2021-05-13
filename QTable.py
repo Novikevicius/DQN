@@ -57,8 +57,8 @@ class QTable(object):
         # check if we actually need to split?
         diff = abs(value-self.values[tuple(indexes)])
         split = diff > 0.01
-        if(split):
-            print("Split:", indexes)
+        #if(split and count_hits):
+        #    print("Split:", indexes)
 
         self.values[tuple(indexes)] = value
         # split intervals
