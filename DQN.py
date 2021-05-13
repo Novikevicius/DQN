@@ -338,6 +338,32 @@ def run_cartpole_experiments():
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
         f.close()
+def run_DQT_cartpole_experiments():
+    global MODELS_FOLDER
+    MODELS_FOLDER = 'experiments/DQT/CartPole/models/'
+    experiment_ID_file = 'experiments/DQT/CartPole/exp_ID.txt'
+    if os.path.exists(experiment_ID_file):
+        with open(experiment_ID_file, 'r+') as f:
+            ID = int(f.readline())
+            f.close()
+    else:
+        ID = 0
+    global env
+    env = gym.make("CartPole-v0")
+    model = [QTable.Input(-0.1, 0.1, 0.1, 4, static=False),
+            QTable.Input(-0.1, 0.1, 0.1, 4, static=False),
+            QTable.Input(-0.1, 0.1, 0.1, 4, static=False),
+            QTable.Input(-0.1, 0.1, 0.1, 4, static=False),]
+    ID = run_dqt_cartpole_experiment(ID, epochs=10000, lr=0.1,  gamma=0.99, result_x_size=100)
+    ID = run_dqt_cartpole_experiment(ID, epochs=10000, lr=0.5,  gamma=0.99, result_x_size=100)
+    ID = run_dqt_cartpole_experiment(ID, epochs=10000, lr=0.7,  gamma=0.99, result_x_size=100)
+    #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
+    #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
+    #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    with open(experiment_ID_file, 'w') as f:
+        f.write(str(ID)+'\n')
+        f.close()
 def run_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100):
     global env
     def choose_action(table, state):
