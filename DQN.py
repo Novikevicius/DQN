@@ -918,6 +918,8 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
 
         result_x_size = 5
         rewards, _ = agent.train(gamma=gamma,  epochs=epochs, batchSize=16, file=f)
+        max_score_after = np.argmax(rewards)
+        max_score = rewards[max_score_after]
 
         rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
         count = result_x_size
@@ -927,8 +929,7 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
             results.append(sum(r/result_x_size))
             count += result_x_size
 
-        max_score_after = np.argmax(results)
-        plot(results, fullPath, ID, x_size=result_x_size, max_score=results[max_score_after], max_score_after=max_score_after, lr=lr)
+        plot(results, fullPath, ID, xs=[i * result_x_size for i in range(len(results))], x_size=result_x_size, max_score=max_score, max_score_after=max_score_after, lr=lr)
         f.write("Final score: " + str(rewards[len(rewards)-1]) + '\n')
         f.write("Final average score: " + str(results[len(results)-1]) + '\n')
         print("Final score: " + str(rewards[len(rewards)-1]))
