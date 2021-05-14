@@ -916,11 +916,23 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
         f.write("Model summary:\n")
         agent.agent.summary(print_fn=lambda s: f.write(s + '\n'))
 
-        r, _ = agent.train(gamma=gamma,  epochs=epochs, batchSize=16, file=f)
-        max_score_after = np.argmax(r)
-        plot(r, fullPath, ID, x_size=1, max_score=r[max_score_after], max_score_after=max_score_after, lr=lr)
-        f.write("Final score: " + str(r[len(r)-1]) + '\n')
-        print("Final score: " + str(r[len(r)-1]))
+        result_x_size = 5
+        rewards, _ = agent.train(gamma=gamma,  epochs=epochs, batchSize=16, file=f)
+
+        rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
+        count = result_x_size
+
+        results = [] # average rewards per result_x_size episodes
+        for r in rewards_per_x_episodes:
+            results.append(sum(r/result_x_size))
+            count += result_x_size
+
+        max_score_after = np.argmax(results)
+        plot(results, fullPath, ID, x_size=result_x_size, max_score=results[max_score_after], max_score_after=max_score_after, lr=lr)
+        f.write("Final score: " + str(rewards[len(rewards)-1]) + '\n')
+        f.write("Final average score: " + str(results[len(results)-1]) + '\n')
+        print("Final score: " + str(rewards[len(rewards)-1]))
+        print("Final average score: " + str(results[len(results)-1]))
 
     return ID+1
 
