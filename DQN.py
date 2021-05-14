@@ -26,11 +26,12 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 def start():
     #DQT experiments
-    run_DQT_cartpole_experiments()
+    #NEED TESTING run_DQT_frozenlake_experiments()
+    #run_DQT_cartpole_experiments()
 
     #DQN experiments
     #run_DQN_frozenlake_experiments()
-    #run_DQN_cartpole_experiments()
+    run_DQN_cartpole_experiments()
 
     #QT experiments
     #run_QT_frozen_lake_experiments()
@@ -46,7 +47,7 @@ class DQN_Agent(Agent.Agent):
         self.activation_fn = activation_fn
         self.loss_fn = loss_fn
         self.use_target_network = use_target_network
-        self.memory = deque(maxlen=1000)
+        self.memory = deque(maxlen=2000)
         self.observation_space = env.observation_space.shape# if observation_space == None else observation_space
         if filename:
             from keras.models import load_model
@@ -72,7 +73,7 @@ class DQN_Agent(Agent.Agent):
         self.activation_fn = 'linear'
         self.loss = 'mse'
         '''
-        self.min_exploration = 0.1
+        self.min_exploration = 0.01
         self.max_exploration = 1
         self.exploration_decay = 0.01
         
@@ -117,7 +118,7 @@ class DQN_Agent(Agent.Agent):
 
         agent = Sequential()
         agent.add(Dense(24, input_shape=self.observation_space, activation='relu'))
-        agent.add(BatchNormalization(center=False, trainable=False))
+        #agent.add(BatchNormalization(center=False, trainable=False))
         agent.add(Dense(24, activation='relu'))
         agent.add(Dense(self.env.action_space.n, activation=activation_fn ))        
         agent.compile(loss=loss, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
@@ -173,32 +174,23 @@ class DQN_Agent(Agent.Agent):
                     action = self.env.action_space.sample()
 
                 new_state, reward, done, _ = self.env.step(action)
-                new_state = np.reshape(new_state, [1,4])
 
                 reward = reward if not done else -10
-                self.remember([state, action, reward, new_state, done])
+                state = np.reshape(state, [1,4])
+                new_state = np.reshape(new_state, [1,4])
 
-                score += 1
+                self.remember([state, action, reward, new_state, done])
                 state = new_state
 
                 if done:
-                    '''
-                    if e % 10 == 0:
-                        log_msg = "Epoch: " +  str(e) + ", score"# +  str(max_score)
-                        if file:
-                            file.write(log_msg + '\n')
-                        else:
-                            print(log_msg)
-                    '''
                     break
             score = i
             results.append(score)
+            print("E:", e, "score:", i, "epsilon:", self.epsilon, "reward", reward)
             self.replay(gamma=gamma, batch_size=batchSize)
-            if self.use_target_network and e % 10 == 0 and e != 0:
+            if self.use_target_network and e % 5 == 0 and e != 0:
                 self.update_agent()
-            
             self.epsilon = self.min_exploration + (self.max_exploration - self.min_exploration) * np.exp(-self.exploration_decay*e)
-            print("E:", e, "score:", i, "epsilon:", self.epsilon)
 
         self.save()
         return results, 1
@@ -219,10 +211,10 @@ class DQN_Agent(Agent.Agent):
                 target = r + gamma * np.max(prediction)
             T_s = self.agent.predict(s)
             T_s[0][a] = target
-            xs.append(s[0])
-            ys.append(T_s[0])
-            #self.agent.fit(s, T_s, epochs=1, verbose=0)
-        self.agent.fit(np.array(xs), np.array(ys), epochs=1, batch_size=len(xs), verbose=0)
+            #xs.append(s[0])
+            #ys.append(T_s[0])
+            self.agent.fit(s, T_s, epochs=1, verbose=0)
+        #self.agent.fit(np.array(xs), np.array(ys), epochs=1, batch_size=len(xs), verbose=0)
 
     def save(self, filename=None):
         if filename == None:
@@ -322,8 +314,13 @@ def run_DQN_cartpole_experiments():
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
-    ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
-    ID = run_DQN_CartPole_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.0001, 0.99, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
+   # ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.99, 'linear', 'mse')
+   # ID = run_DQN_CartPole_experiment(ID, 500, 0.3, 0.99, 'linear', 'mse')
+    ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.95, 'linear', 'mse') # gave good results
+   # ID = run_DQN_CartPole_experiment(ID, 500, 0.7, 0.90, 'linear', 'mse')
+    #ID = run_DQN_CartPole_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse') #totally fails
 
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
@@ -919,7 +916,7 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
         f.write("Model summary:\n")
         agent.agent.summary(print_fn=lambda s: f.write(s + '\n'))
 
-        r, _ = agent.train(gamma=gamma,  epochs=epochs, batchSize=64, file=f)
+        r, _ = agent.train(gamma=gamma,  epochs=epochs, batchSize=16, file=f)
         max_score_after = np.argmax(r)
         plot(r, fullPath, ID, x_size=1, max_score=r[max_score_after], max_score_after=max_score_after, lr=lr)
         f.write("Final score: " + str(r[len(r)-1]) + '\n')
