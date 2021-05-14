@@ -30,8 +30,8 @@ def start():
     #run_DQT_cartpole_experiments()
 
     #DQN experiments
-    #run_DQN_frozenlake_experiments()
-    run_DQN_cartpole_experiments()
+    run_DQN_frozenlake_experiments()
+    #run_DQN_cartpole_experiments()
 
     #QT experiments
     #run_QT_frozen_lake_experiments()
@@ -48,7 +48,8 @@ class DQN_Agent(Agent.Agent):
         self.loss_fn = loss_fn
         self.use_target_network = use_target_network
         self.memory = deque(maxlen=2000)
-        self.observation_space = env.observation_space.shape# if observation_space == None else observation_space
+        self.observation_space = env.observation_space.shape if len(env.observation_space.shape) > 0 else env.observation_space.n
+        self.frozen_lake = True
         if filename:
             from keras.models import load_model
             self.agent = load_model(filename)
@@ -117,7 +118,10 @@ class DQN_Agent(Agent.Agent):
         loss = self.loss if 'loss' not in params else params['loss']
 
         agent = Sequential()
-        agent.add(Dense(24, input_shape=self.observation_space, activation='relu'))
+        if self.observation_space is type(int):
+            agent.add(Dense(24, input_shape=self.observation_space, activation='relu'))
+        else:
+            agent.add(Dense(24, input_dim=self.observation_space, activation='relu'))
         #agent.add(BatchNormalization(center=False, trainable=False))
         agent.add(Dense(24, activation='relu'))
         agent.add(Dense(self.env.action_space.n, activation=activation_fn ))        
@@ -159,12 +163,19 @@ class DQN_Agent(Agent.Agent):
         min_exploration_rate = self.min_exploration
         max_exploration_rate = self.max_exploration
         exploration_decay_rate = self.exploration_decay
+        def one_hot_encode(state):
+            s = np.zeros(16)
+            s[state] = 1
+            return np.array([s])
         results = []
         for e in range(epochs):
             done = False
             score = 0            
             state = self.env.reset()
-            state = np.reshape(state, [1,4])
+            if self.frozen_lake:
+                state = one_hot_encode(state)
+            else:
+                state = np.reshape(state, [1,4])
 
             for i in range(500):                
                 if self.epsilon == None or random.uniform(0, 1) > self.epsilon:
@@ -175,16 +186,23 @@ class DQN_Agent(Agent.Agent):
 
                 new_state, reward, done, _ = self.env.step(action)
 
-                reward = reward if not done else -10
-                state = np.reshape(state, [1,4])
-                new_state = np.reshape(new_state, [1,4])
+                if self.frozen_lake:
+                    new_state = one_hot_encode(new_state)
+                    if done and reward == 0:
+                        reward = -1
+                else:
+                    reward = reward if not done else -10
+                    state = np.reshape(state, [1,4])
+                    new_state = np.reshape(new_state, [1,4])
 
                 self.remember([state, action, reward, new_state, done])
                 state = new_state
 
                 if done:
+                    if self.frozen_lake:
+                        reward = 0 if reward < 0 else reward
                     break
-            score = i
+            score = reward if self.frozen_lake else i
             results.append(score)
             print("E:", e, "score:", i, "epsilon:", self.epsilon, "reward", reward)
             self.replay(gamma=gamma, batch_size=batchSize)
@@ -340,8 +358,8 @@ def run_DQN_frozenlake_experiments():
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
-    ID = run_DQN_FrozenLake_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
-    ID = run_DQN_FrozenLake_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
+    ID = run_DQN_FrozenLake_experiment(ID, 1000, 0.001, 0.9, 'linear', 'mse')
+    #ID = run_DQN_FrozenLake_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
 
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
@@ -916,7 +934,7 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
         f.write("Model summary:\n")
         agent.agent.summary(print_fn=lambda s: f.write(s + '\n'))
 
-        result_x_size = 5
+        result_x_size = 10
         rewards, _ = agent.train(gamma=gamma,  epochs=epochs, batchSize=16, file=f)
         max_score_after = np.argmax(rewards)
         max_score = rewards[max_score_after]
