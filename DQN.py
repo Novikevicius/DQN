@@ -9,7 +9,7 @@ from collections import deque
 from keras.models import Sequential
 from keras.layers import Input
 from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Conv2D, MaxPooling2D, BatchNormalization
 import matplotlib.image as mpimg
 from IPython import display
 import os
@@ -19,6 +19,10 @@ import Agent
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
 CARTPOLE_ENV_NAME = "CartPole-v0"
 FROZENLAKE_ENV_NAME = "FrozenLake-v0"
+
+import tensorflow as tf
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 def start():
     #DQT experiments
@@ -209,15 +213,16 @@ class DQN_Agent(Agent.Agent):
             target = r
             if not done:
                 if self.use_target_network:
-                    prediction = self.target.predict(np.array([s_new]))
+                    prediction = self.target.predict(s_new)[0]
                 else:
-                    prediction = self.agent.predict(np.array([s_new]))
-                target = r + gamma * np.max(prediction[0])
-            T_s = self.agent.predict(np.array([s]))
+                    prediction = self.agent.predict(s_new)[0]
+                target = r + gamma * np.max(prediction)
+            T_s = self.agent.predict(s)
             T_s[0][a] = target
-            xs.append(s)
+            xs.append(s[0])
             ys.append(T_s[0])
-        self.agent.fit(np.array(xs), np.array(ys), batch_size=len(xs), verbose=0)
+            #self.agent.fit(s, T_s, epochs=1, verbose=0)
+        self.agent.fit(np.array(xs), np.array(ys), epochs=1, batch_size=len(xs), verbose=0)
 
     def save(self, filename=None):
         if filename == None:
