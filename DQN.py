@@ -34,14 +34,16 @@ def start():
     pass
 
 class DQN_Agent(Agent.Agent):
-    def __init__(self, env_name, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None , use_target_network=True, params=None):
-        super().__init__(env_name)
+    def __init__(self, env, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None , use_target_network=False, params=None, observation_space=None):
+        #super().__init__(env_name)
+        self.env = env
         self.ID = ID
         self.lr = lr
         self.activation_fn = activation_fn
         self.loss_fn = loss_fn
         self.use_target_network = use_target_network
-        self.memory = deque(maxlen=100000)
+        self.memory = deque(maxlen=1000)
+        self.observation_space = env.observation_space.shape# if observation_space == None else observation_space
         if filename:
             from keras.models import load_model
             self.agent = load_model(filename)
@@ -51,6 +53,9 @@ class DQN_Agent(Agent.Agent):
             
             if self.use_target_network:
                 self.target = keras.models.clone_model(self.agent)
+                self.target.build(self.observation_space)
+                self.target.compile(loss=self.loss_fn, optimizer=keras.optimizers.Adam(learning_rate=self.lr), metrics=['accuracy'])
+                self.target.set_weights(self.agent.get_weights())
 
                 '''
         #default values
@@ -63,10 +68,10 @@ class DQN_Agent(Agent.Agent):
         self.activation_fn = 'linear'
         self.loss = 'mse'
         '''
-        self.min_exploration = 0.01
+        self.min_exploration = 0.1
         self.max_exploration = 1
         self.exploration_decay = 0.01
-
+        
     def summary(self):
         from io import StringIO
         stream = StringIO()
@@ -107,15 +112,18 @@ class DQN_Agent(Agent.Agent):
         loss = self.loss if 'loss' not in params else params['loss']
 
         agent = Sequential()
-        agent.add(Dense(25, input_shape=self.env.observation_space.shape, activation='relu'))
-        agent.add(Dense(50, activation='relu'))
-        agent.add(Dense(100, activation='relu'))
-        agent.add(Dense(50, activation='relu'))
-        agent.add(Dense(25, activation='relu'))
+        agent.add(Dense(24, input_shape=self.observation_space, activation='relu'))
+        agent.add(BatchNormalization(center=False, trainable=False))
+        agent.add(Dense(24, activation='relu'))
         agent.add(Dense(self.env.action_space.n, activation=activation_fn ))        
         agent.compile(loss=loss, optimizer=keras.optimizers.Adam(learning_rate=lr), metrics=['accuracy'])
         return agent
-    
+
+    def update_agent(self):
+        self.agent = keras.models.clone_model(self.target)
+        self.agent.build(self.observation_space)
+        self.agent.compile(loss=self.loss_fn, optimizer=keras.optimizers.Adam(learning_rate=self.lr), metrics=['accuracy'])
+        self.agent.set_weights(self.target.get_weights())
     def reset(self):
         self.createModel()
 
@@ -150,41 +158,47 @@ class DQN_Agent(Agent.Agent):
         for e in range(epochs):
             done = False
             score = 0            
-            state = np.array([self.env.reset()])
+            state = self.env.reset()
+            state = np.reshape(state, [1,4])
 
             for i in range(500):                
                 if self.epsilon == None or random.uniform(0, 1) > self.epsilon:
                     #action = np.argmax(self.table.getValue(state))
-                    action = np.argmax(self.agent.predict(state))
+                    action = np.argmax(self.agent.predict(state)[0])
                 else:
                     action = self.env.action_space.sample()
-                new_state, reward, done, _ = self.env.step(action)
-                new_state = np.array([new_state])
 
-                self.rember([state, action, reward, new_state, done])
+                new_state, reward, done, _ = self.env.step(action)
+                new_state = np.reshape(new_state, [1,4])
+
+                reward = reward if not done else -10
+                self.remember([state, action, reward, new_state, done])
 
                 score += 1
                 state = new_state
 
                 if done:
+                    '''
                     if e % 10 == 0:
                         log_msg = "Epoch: " +  str(e) + ", score"# +  str(max_score)
                         if file:
                             file.write(log_msg + '\n')
                         else:
                             print(log_msg)
+                    '''
                     break
+            score = i
             results.append(score)
-            self.replay(batchSize)
-            if self.use_target_network and e % 50 == 0 and e != 0:
-                self.target = keras.models.clone_model(self.agent)
-                
+            self.replay(gamma=gamma, batch_size=batchSize)
+            if self.use_target_network and e % 10 == 0 and e != 0:
+                self.update_agent()
+            
             self.epsilon = self.min_exploration + (self.max_exploration - self.min_exploration) * np.exp(-self.exploration_decay*e)
-        print("E:", e, "score:", i, "epsilon:", epsilon)
+            print("E:", e, "score:", i, "epsilon:", self.epsilon)
 
         self.save()
         return results, 1
-    def rember(self, s):
+    def remember(self, s):
         self.memory.append(s)
     def replay(self, gamma=0.99, batch_size=256):
 
