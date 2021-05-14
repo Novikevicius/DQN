@@ -318,7 +318,7 @@ def run_DQN_cartpole_experiments():
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
    # ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.99, 'linear', 'mse')
    # ID = run_DQN_CartPole_experiment(ID, 500, 0.3, 0.99, 'linear', 'mse')
-    ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.95, 'linear', 'mse') # gave good results
+    ID = run_DQN_CartPole_experiment(ID, 1000, 0.001, 0.95, 'linear', 'mse') # gave good results
    # ID = run_DQN_CartPole_experiment(ID, 500, 0.7, 0.90, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse') #totally fails
 
