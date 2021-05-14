@@ -358,7 +358,7 @@ def run_DQN_frozenlake_experiments():
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.01,  0.99, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.1,   0.99, 'linear', 'mse')
-    ID = run_DQN_FrozenLake_experiment(ID, 1000, 0.001, 0.9, 'linear', 'mse')
+    ID = run_DQN_FrozenLake_experiment(ID, 1000, 0.001, 0.8, 'linear', 'mse')
     #ID = run_DQN_FrozenLake_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse')
 
     with open(experiment_ID_file, 'w') as f:
