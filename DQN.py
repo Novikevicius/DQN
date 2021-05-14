@@ -353,12 +353,12 @@ def run_DQN_frozenlake_experiments():
 def run_DQN_FrozenLake_experiment(ID, epochs=500, lr=0.001, gamma=0.90, activation='linear', loss='mse'):
     global env
     env = gym.make(FROZENLAKE_ENV_NAME)
-    run_experiment(ID, epochs, lr, gamma, activation, loss, FROZENLAKE_ENV_NAME)
+    return run_experiment(ID, epochs, lr, gamma, activation, loss, FROZENLAKE_ENV_NAME)
 
 def run_DQN_CartPole_experiment(ID, epochs=500, lr=0.001, gamma=0.90, activation='linear', loss='mse'):
     global env
     env = gym.make(CARTPOLE_ENV_NAME)
-    run_experiment(ID, epochs, lr, gamma, activation, loss, CARTPOLE_ENV_NAME)
+    return run_experiment(ID, epochs, lr, gamma, activation, loss, CARTPOLE_ENV_NAME)
 
 def run_QT_frozen_lake_experiments():
     global MODELS_FOLDER
