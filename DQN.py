@@ -435,8 +435,8 @@ def run_DQT_cartpole_experiments():
             QTable.Input(-0.1, 0.1, 0.1, 4, static=False),
             QTable.Input(-0.1, 0.1, 0.1, 4, static=False),]
     ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.1,  gamma=0.99, result_x_size=100)
-    ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=100)
-    ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=100)
+    #ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=100)
+    #ID = run_dqt_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=100)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
