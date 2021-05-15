@@ -457,11 +457,11 @@ def run_DQT_frozenlake_experiments():
         ID = 0
     global env
     env = gym.make(FROZENLAKE_ENV_NAME)
-    model = [QTable.Input(0, 1, 1, 2, static=False)]
-    ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.05,  gamma=0.99, result_x_size=100)
-    ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.1,  gamma=0.99, result_x_size=100)
-    ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.2,  gamma=0.99, result_x_size=100)
-    ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.3,  gamma=0.99, result_x_size=100)
+    model = [QTable.Input(0, 1, 1, 1, static=False)]
+    ID = run_dqt_frozenlake_experiment(ID, epochs=50000, lr=0.15,  gamma=0.99, result_x_size=100, model=model)
+    #ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.1,  gamma=0.99, result_x_size=100)
+    #ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.2,  gamma=0.99, result_x_size=100)
+    #ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.3,  gamma=0.99, result_x_size=100)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
