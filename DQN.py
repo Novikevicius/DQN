@@ -493,12 +493,12 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
     print("Running experiment " + str(ID) + ":")
     epsilon = 1
     max_exploration_rate = 1
-    min_exploration_rate = 0.01
-    exploration_decay_rate = 0.01
-    model = [QTable.Input(0, 15, 1, 0)]
-    table = QTable.QTable(env.action_space.n, model=model)
+    min_exploration_rate = 0.1
+    exploration_decay_rate = 0.001
+    model = [QTable.Input(0, 15, 1, 0, static=True)]
+    table = QTable.QTable(env.action_space.n, model=model, dynamic=False)
     rewards = []
-    max_steps = 200
+    max_steps = 500
     max_score = 0
     max_score_after = 0
     for e in range(epochs):
@@ -508,97 +508,22 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
         for s in range(max_steps):
             action = choose_action(table, state)
             new_state, reward, done, _ = env.step(action)
-            v = table.getValue(state)
+            if done:
+                reward = -1 if reward == 0 else reward
             q_new = table.getValue(state)[action] * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)))
             table.setValue(state, action, q_new)
             #table.setValue(state, action, q_new, e < 100)
             state = new_state
-            r += reward
             if done:
+                reward = 0.0 if reward < 0 else reward
+                r = reward
                 break
         epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
         rewards.append(r)
         if max_score < r:
             max_score = r
             max_score_after = e
-        print("E:", e, "score:", s, "epsilon:", epsilon)
-    
-    max_score = None if max_score == 0 else max_score
-    max_score_after = None if max_score == None else max_score_after
-    rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
-    count = result_x_size
-
-    results = [] # average rewards per result_x_size episodes
-    for r in rewards_per_x_episodes:
-        results.append(sum(r/result_x_size))
-        count += result_x_size
-    
-    with open(fullPathWithExt, 'w') as f:
-        f.write("Experiment "     + str(ID)        + ':\n')
-        f.write("Epochs: "        + str(epochs)    + '\n')
-        f.write("Learning rate: " + str(lr)        + '\n')
-        f.write("Gamma: "         + str(gamma)     + '\n')
-        f.write("Last Reward: "   + str(rewards[len(rewards)-1])     + '\n')
-
-        plot(results, fullPath, ID, xs=[i for i in range(result_x_size, epochs+1, result_x_size)], x_size=result_x_size, max_score=max_score, max_score_after=max_score_after, lr=lr)
-        f.write("Max score: " + str(max_score) + " after " + str(max_score_after) + '\n')
-        f.write("Final score: " + str(results[len(results)-1]) + '\n')
-        print("Final score: " + str(results[len(results)-1]))
-        print("Max score: " + str(max_score) + " after " + str(max_score_after) + '\n')
-    table.save(MODELS_FOLDER+str(ID))
-    return ID+1
-def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_size=100):
-    global env
-    def choose_action(table, state):
-        if random.uniform(0, 1) > epsilon:
-            action = np.argmax(table.getValue(state))
-        else:
-            action = env.action_space.sample()
-        return action
-    experiments_folder = 'experiments'
-    agent_folder    = 'Q_Table/{0}'.format(FROZENLAKE_ENV_NAME)
-    folder          = experiments_folder + '/' + agent_folder
-    file            = '{0}_{1}'.format(FROZENLAKE_ENV_NAME, ID)
-    fullPath        = folder + '/' + file
-    fullPathWithExt = fullPath + '.txt'
-
-    if not os.path.exists(experiments_folder):
-        os.mkdir(experiments_folder)
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-
-    print("Running experiment " + str(ID) + ":")
-    epsilon = 1
-    max_exploration_rate = 1
-    min_exploration_rate = 0.01
-    exploration_decay_rate = 0.01
-    model = [QTable.Input(0, 15, 1, 0)]
-    table = QTable.QTable(env.action_space.n, model=model)
-    rewards = []
-    max_steps = 200
-    max_score = 0
-    max_score_after = 0
-    for e in range(epochs):
-        state = env.reset()
-        done = False
-        r = 0
-        for s in range(max_steps):
-            action = choose_action(table, state)
-            new_state, reward, done, _ = env.step(action)
-            v = table.getValue(state)
-            q_new = table.getValue(state)[action] * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)))
-            table.setValue(state, action, q_new)
-            #table.setValue(state, action, q_new, e < 100)
-            state = new_state
-            r += reward
-            if done:
-                break
-        epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
-        rewards.append(r)
-        if max_score < r:
-            max_score = r
-            max_score_after = e
-        print("E:", e, "score:", s, "epsilon:", epsilon)
+        print("E:", e, "score:", r, "epsilon:", epsilon)
     
     max_score = None if max_score == 0 else max_score
     max_score_after = None if max_score == None else max_score_after
