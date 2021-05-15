@@ -387,7 +387,7 @@ def run_QT_frozen_lake_experiments():
         ID = 0
     global env    
     env = gym.make(FROZENLAKE_ENV_NAME)
-    ID = run_QT_frozen_lake_experiment(ID, epochs=50000, lr=0.1, gamma=0.99, result_x_size=100)
+    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1, gamma=0.99, result_x_size=50)
     #ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
     #ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     #ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
@@ -408,8 +408,8 @@ def run_QT_cartpole_experiments():
         ID = 0
     global env
     env = gym.make(CARTPOLE_ENV_NAME)
-    ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=1000)
-    ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=1000)
+    ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=100)
+    #ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
@@ -493,7 +493,7 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
     print("Running experiment " + str(ID) + ":")
     epsilon = 1
     max_exploration_rate = 1
-    min_exploration_rate = 0.1
+    min_exploration_rate = 0.001
     exploration_decay_rate = 0.001
     model = [QTable.Input(0, 15, 1, 0, static=True)]
     table = QTable.QTable(env.action_space.n, model=model, dynamic=False)
@@ -509,7 +509,7 @@ def run_QT_frozen_lake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
             action = choose_action(table, state)
             new_state, reward, done, _ = env.step(action)
             if done:
-                reward = -1 if reward == 0 else reward
+                reward = -1 if reward == 0 and s < 99 else reward
             q_new = table.getValue(state)[action] * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)))
             table.setValue(state, action, q_new)
             #table.setValue(state, action, q_new, e < 100)
