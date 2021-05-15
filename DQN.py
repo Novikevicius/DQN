@@ -387,11 +387,11 @@ def run_QT_frozen_lake_experiments():
         ID = 0
     global env    
     env = gym.make(FROZENLAKE_ENV_NAME)
-    ID = run_QT_frozen_lake_experiment(ID, epochs=10000, lr=0.01, gamma=0.99, result_x_size=1000)
-    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
-    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
-    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
-    ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    ID = run_QT_frozen_lake_experiment(ID, epochs=50000, lr=0.1, gamma=0.99, result_x_size=100)
+    #ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
+    #ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    #ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
+    #ID = run_QT_frozen_lake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     with open(experiment_ID_file, 'w') as f:
         f.write(str(ID)+'\n')
         f.close()
