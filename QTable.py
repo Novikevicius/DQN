@@ -65,9 +65,13 @@ class QTable(object):
         if self.dynamic:
             for i in range(self.state_space):
                 if type(state) is list or type(state) is np.array or type(state) is np.ndarray:
-                    indexes.append(self.table[i].map(state[i], count_hits, split))
+                    self.table[i].map(state[i], count_hits, split)
                 else:
-                    indexes.append(self.table[i].map(state, count_hits, split))
+                    self.table[i].map(state, count_hits, split)
+
+    # get Out Of Bounds step sizes
+    def get_OOB(self):
+        return [inpt.OUT_OF_BOUNDS_STEP_SIZE for inpt in self.table]
     
     def save(self, fileName, static=True):
         a = np.asfarray(self.values)
@@ -102,7 +106,7 @@ class QTable(object):
         return tokens[1]
 
 class Input(object):
-    def __init__(self, min, max, step_size, precision=2, index=0, callback=None, min_hits=25, static=True) -> None:
+    def __init__(self, min, max, step_size, precision=2, index=0, callback=None, min_hits=25, static=True, out_of_bounds_step=None) -> None:
         self.precision = precision
         self.min = min
         self.max = max
@@ -117,6 +121,7 @@ class Input(object):
         #self.min_hits = min_hits
         self.min_hits = 1
         self.static = static
+        self.OUT_OF_BOUNDS_STEP_SIZE = self.step_size if out_of_bounds_step == None else out_of_bounds_step
         
     def split(self, step_size):
         return (self.max - self.min) / step_size
@@ -128,7 +133,8 @@ class Input(object):
                     return i
                 self.indexes[i] = (v, hits+1)
                 if i == 0 or i == self.size-1:
-                    mid = self.step_size
+                    mid = self.OUT_OF_BOUNDS_STEP_SIZE
+                    #mid = self.step_size
                     if i == 0:
                         diff = v - self.indexes[i+1][0]
                     else:
@@ -136,8 +142,8 @@ class Input(object):
                 else:
                     diff = v - self.indexes[i-1][0]
                     mid = (v-self.indexes[i-1][0]) / 2
-                if abs(diff) < self.EPSILON or not split:
-                        return i
+                if abs(value - v) < self.EPSILON or abs(diff) < self.EPSILON or not split:
+                    return i
                 if(count_hits and hits+1 >= self.min_hits):
                     self.indexes[i] = (v, 0)
                     if i == self.size-1:
