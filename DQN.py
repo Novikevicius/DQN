@@ -731,7 +731,7 @@ def run_dqt_frozenlake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
     epsilon = 1
     max_exploration_rate = 1
     min_exploration_rate = 0.1
-    exploration_decay_rate = 0.01
+    exploration_decay_rate = 0.0001
     if model == None:
         model = [QTable.Input(0, 1, 1, 1, static=False)]
     starting_model = model.copy()
@@ -747,13 +747,15 @@ def run_dqt_frozenlake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
         for s in range(max_steps):
             action = choose_action(table, state)
             new_state, reward, done, _ = env.step(action)
+            if done and reward == 0:
+                reward = -1
             q_new = table.getValue(state)[action] * (1-lr) + lr * (reward + gamma * np.max(table.getValue(new_state)))
             table.setValue(state, action, q_new)
             #table.setValue(state, action, q_new, e < 100)
             state = new_state
             #r += reward
             if done:
-                r = reward
+                r = reward if reward > 0 else 0.0
                 break
         epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
         rewards.append(r)
