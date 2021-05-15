@@ -458,7 +458,7 @@ def run_DQT_frozenlake_experiments():
     global env
     env = gym.make(FROZENLAKE_ENV_NAME)
     model = [QTable.Input(0, 1, 1, 1, static=False)]
-    ID = run_dqt_frozenlake_experiment(ID, epochs=50000, lr=0.15,  gamma=0.99, result_x_size=100, model=model)
+    ID = run_dqt_frozenlake_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=50, model=model)
     #ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.1,  gamma=0.99, result_x_size=100)
     #ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.2,  gamma=0.99, result_x_size=100)
     #ID = run_dqt_frozenlake_experiment(ID, epochs=20000, lr=0.3,  gamma=0.99, result_x_size=100)
@@ -730,8 +730,8 @@ def run_dqt_frozenlake_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_
     print("Running DQT FrozenLake experiment " + str(ID) + ":")
     epsilon = 1
     max_exploration_rate = 1
-    min_exploration_rate = 0.1
-    exploration_decay_rate = 0.0001
+    min_exploration_rate = 0.0001
+    exploration_decay_rate = 0.001
     if model == None:
         model = [QTable.Input(0, 1, 1, 1, static=False)]
     starting_model = model.copy()
