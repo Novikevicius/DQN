@@ -122,8 +122,6 @@ class DQN_Agent(Agent.Agent):
             agent.add(Dense(24, input_dim=self.observation_space, activation='relu'))
         else:
             agent.add(Dense(24, input_shape=self.observation_space, activation='relu'))
-        else:
-            agent.add(Dense(24, input_dim=self.observation_space, activation='relu'))
         #agent.add(BatchNormalization(center=False, trainable=False))
         agent.add(Dense(24, activation='relu'))
         agent.add(Dense(self.env.action_space.n, activation=activation_fn ))        
@@ -410,7 +408,7 @@ def run_QT_cartpole_experiments():
         ID = 0
     global env
     env = gym.make(CARTPOLE_ENV_NAME)
-    ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.5,  gamma=0.99, result_x_size=100)
+    ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.3,  gamma=0.99, result_x_size=100)
     #ID = run_QT_cartpole_experiment(ID, epochs=100000, lr=0.7,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.1,  gamma=0.99, result_x_size=1000)
     #ID = run_cartpole_experiment(ID, epochs=30000, lr=0.01, gamma=0.99, result_x_size=1000)
@@ -603,7 +601,8 @@ def run_QT_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_siz
         epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*e)
         rewards.append(r)
         print("E:", e, "score:", s, "epsilon:", epsilon)
-    
+    max_score_after = np.argmax(rewards)
+    max_score = rewards[max_score_after]
     rewards_per_x_episodes = np.split(np.array(rewards),epochs/result_x_size)
     count = result_x_size
 
@@ -619,7 +618,7 @@ def run_QT_cartpole_experiment(ID, epochs=100, lr=0.01, gamma=0.99, result_x_siz
         f.write("Gamma: "         + str(gamma)     + '\n')
         f.write("Last Reward: "   + str(rewards[len(rewards)-1])     + '\n')
 
-        plot(results, fullPath, ID, xs=[i for i in range(result_x_size, epochs+1, result_x_size)])
+        plot(results, fullPath, ID, xs=[i for i in range(result_x_size, epochs+1, result_x_size)], x_size=result_x_size, max_score=max_score, max_score_after=max_score_after, lr=lr)
         f.write("Final score: " + str(results[len(results)-1]) + '\n')
         print("Final score: " + str(results[len(results)-1]))
     table.save(MODELS_FOLDER+str(ID))
