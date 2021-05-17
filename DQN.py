@@ -48,7 +48,7 @@ class DQN_Agent(Agent.Agent):
         self.loss_fn = loss_fn
         self.use_target_network = use_target_network
         self.memory = deque(maxlen=2000)
-        self.observation_space = env.observation_space.shape if len(env.observation_space.shape) > 0 else env.observation_space.n
+        self.observation_space = env.observation_space.shape if env.observation_space.shape[0] > 1 else env.observation_space.n
         self.frozen_lake = True
         if filename:
             from keras.models import load_model
@@ -118,7 +118,9 @@ class DQN_Agent(Agent.Agent):
         loss = self.loss if 'loss' not in params else params['loss']
 
         agent = Sequential()
-        if self.observation_space is type(int):
+        if type(self.observation_space) is int:
+            agent.add(Dense(24, input_dim=self.observation_space, activation='relu'))
+        else:
             agent.add(Dense(24, input_shape=self.observation_space, activation='relu'))
         else:
             agent.add(Dense(24, input_dim=self.observation_space, activation='relu'))
@@ -336,7 +338,7 @@ def run_DQN_cartpole_experiments():
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.90, 'linear', 'mse')
    # ID = run_DQN_CartPole_experiment(ID, 500, 0.001, 0.99, 'linear', 'mse')
    # ID = run_DQN_CartPole_experiment(ID, 500, 0.3, 0.99, 'linear', 'mse')
-    ID = run_DQN_CartPole_experiment(ID, 1000, 0.001, 0.9, 'linear', 'mse') # gave good results
+    ID = run_DQN_CartPole_experiment(ID, 1500, 0.001, 0.9, 'linear', 'mse') # gave good results
    # ID = run_DQN_CartPole_experiment(ID, 500, 0.7, 0.90, 'linear', 'mse')
     #ID = run_DQN_CartPole_experiment(ID, 500, 0.01, 0.99, 'linear', 'mse') #totally fails
 
@@ -850,6 +852,7 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
         os.mkdir(folder)
 
     agent = DQN_Agent(env, ID, lr, activation, loss, observation_space=4)
+    agent.frozen_lake = env_name == FROZENLAKE_ENV_NAME
     print("Running experiment {0} ID:{1}:".format(env_name, ID))
     with open(fullPathWithExt, 'w') as f:
         f.write("Experiment "     + str(ID)     + ':\n')
