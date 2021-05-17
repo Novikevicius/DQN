@@ -48,7 +48,7 @@ class DQN_Agent(Agent.Agent):
         self.loss_fn = loss_fn
         self.use_target_network = use_target_network
         self.memory = deque(maxlen=2000)
-        self.observation_space = env.observation_space.shape if env.observation_space.shape[0] > 1 else env.observation_space.n
+        self.observation_space = env.observation_space.shape if len(env.observation_space.shape) > 0 else env.observation_space.n
         self.frozen_lake = True
         if filename:
             from keras.models import load_model
