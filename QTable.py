@@ -162,7 +162,7 @@ class Input(object):
         return s
     def get_intervals(self):
         s = [float('-inf')]
-        for i in range(self.size-2):
+        for i in range(self.size-1):
             s.append(self.indexes[i][0])
         s.append(float('+inf'))
         return s
