@@ -1,21 +1,15 @@
-from os import system
 import random
 import gym
-from keras.engine.saving import load_model
 import matplotlib.pyplot as plt
 import numpy as np
 import keras
 from collections import deque
 from keras.models import Sequential
-from keras.layers import Input
-from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D, BatchNormalization
-import matplotlib.image as mpimg
-from IPython import display
+from keras.layers import Dense
+
 import os
 import QTable
-import sys
-import Agent
+
 MODELS_FOLDER = 'experiments/DQN_Agent/models/'
 CARTPOLE_ENV_NAME = "CartPole-v0"
 FROZENLAKE_ENV_NAME = "FrozenLake-v0"
@@ -26,21 +20,20 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 def start():
     #DQT experiments
-    #NEED TESTING run_DQT_frozenlake_experiments()
-    #run_DQT_cartpole_experiments()
+    run_DQT_frozenlake_experiments()
+    run_DQT_cartpole_experiments()
 
     #DQN experiments
     run_DQN_frozenlake_experiments()
-    #run_DQN_cartpole_experiments()
+    run_DQN_cartpole_experiments()
 
     #QT experiments
-    #run_QT_frozen_lake_experiments()
-    #run_QT_cartpole_experiments()
+    run_QT_frozen_lake_experiments()
+    run_QT_cartpole_experiments()
     pass
 
-class DQN_Agent(Agent.Agent):
+class DQN_Agent():
     def __init__(self, env, ID, lr=0.001, activation_fn='linear', loss_fn='mse', filename=None , use_target_network=False, params=None, observation_space=None):
-        #super().__init__(env_name)
         self.env = env
         self.ID = ID
         self.lr = lr
@@ -63,17 +56,6 @@ class DQN_Agent(Agent.Agent):
                 self.target.compile(loss=self.loss_fn, optimizer=keras.optimizers.Adam(learning_rate=self.lr), metrics=['accuracy'])
                 self.target.set_weights(self.agent.get_weights())
 
-                '''
-        #default values
-        self.min_exploration = 0.01
-        self.max_exploration = 1
-        self.exploration_decay = 0.01
-        self.max_steps = 500
-        self.lr = 0.001
-        self.gamma = 0.99
-        self.activation_fn = 'linear'
-        self.loss = 'mse'
-        '''
         self.min_exploration = 0.01
         self.max_exploration = 1
         self.exploration_decay = 0.01
@@ -85,9 +67,6 @@ class DQN_Agent(Agent.Agent):
         model_summary = stream.getvalue()
         stream.close()
         return super().summary() + ':\n ' + model_summary
-
-    def createTable(self):
-        self.table = QTable.QTable(self.env.action_space.n, model=self.model)
     
     def action(self, state, epsilon=None):
         state = np.array([state])
@@ -96,20 +75,6 @@ class DQN_Agent(Agent.Agent):
         else:
             action = self.env.action_space.sample()
         return action
-        
-    def evaluate(self, state, action=None):
-        state = np.array([state])
-        if action == None:
-            return self.agent.predict(state)[0]
-        return self.agent.predict(state)[0][action]
-        
-    def updateValue(self, state, action, reward, new_state, done, old_value, new_value):
-        self.memory.append([state, action, reward, new_state, done])
-        return
-        state = np.array([state])
-        s = self.agent.predict(np.array(state))
-        s[0][action] = new_value
-        self.agent.fit(state, s, verbose=0)
 
     def createModel(self):
         params = self.params
@@ -135,34 +100,12 @@ class DQN_Agent(Agent.Agent):
         self.agent.set_weights(self.target.get_weights())
     def reset(self):
         self.createModel()
-
-    def onEpisodeEnd(self):
-        self.replay(self.gamma)
-        return
-        gamma = self.gamma
-        batch_size = 50
-        if len(self.memory) < batch_size:
-            return
-        data = random.sample(self.memory, batch_size)
-        for s, a, new_value in data:
-            state = np.array([s])   
-            st = self.agent.predict(np.array(state))
-            st[0][a] = new_value
-            self.agent.fit(state, st, verbose=0)
         
     def train(self, gamma=0.99, epochs=1000, batchSize = 50, file=None, params=None):
         # get required parameters
         if params:
-            epsilon = 1
             epochs = params['epochs']
-            min_exploration_rate = self.min_exploration if 'min_expl' not in params else params['min_expl']
-            max_exploration_rate = self.max_exploration if 'max_expl' not in params else params['max_expl']
-            exploration_decay_rate = self.exploration_decay if 'expl_decay' not in params else params['expl_decay']
-            max_steps = self.max_steps if 'max_steps' not in params else params['max_steps']
         self.epsilon = 1
-        min_exploration_rate = self.min_exploration
-        max_exploration_rate = self.max_exploration
-        exploration_decay_rate = self.exploration_decay
         def one_hot_encode(state):
             s = np.zeros(16)
             s[state] = 1
@@ -239,28 +182,6 @@ class DQN_Agent(Agent.Agent):
             filename = MODELS_FOLDER + str(self.ID)
         self.agent.save(filename)
 
-    def test(self, epochs=10, render=True):
-        max_score = 0
-        for e in range(epochs):
-            state = np.array([self.env.reset()])
-            done = False
-            score = 0
-            for i in range(300):
-                action = np.argmax(self.agent.predict(state))
-                new_state, reward, done, _ = self.env.step(action)
-                new_state = np.array([new_state])
-                if render:
-                    self.env.render()
-                state = new_state
-
-                if done:
-                    break
-                score += 1
-            if score > max_score:
-                max_score = score
-            print("Epoch:", e, "score", score)
-        print("Max score", max_score)
-
 def plot(results, saveFolder=None, ID=0, xs=None, x_size=None, max_score=None, max_score_after=None, lr=None):
     if x_size == 1:
         plt.title("Surenkamų taškų skaičius per epochą")
@@ -280,43 +201,6 @@ def plot(results, saveFolder=None, ID=0, xs=None, x_size=None, max_score=None, m
     else:
         plt.show()
     plt.clf()
-
-def run():
-    global env
-    lr = 0.001
-    gamma = 0.99
-    ID = 1
-    agent = DQN_Agent(env, ID, lr, 'linear')
-    agent.agent.summary()
-    r = []
-    running = True
-    while running:
-        command = input("Agent: " + str(ID) + "\nChoose action: \n\t- e - run DQN experiments \n\t- q - quit \n\t- t - train \n\t- p - plot \n\t- c - create new agent \n\t- r - test agent \n\t- a - change agent \n")
-        if command=='q':
-            running = False
-            break
-        if command=='t':
-            r.extend(agent.train(gamma, 100))
-        if command == 'p' and r:
-            plot(r)
-        if command=='r':
-            agent.test(5)
-        if command=='c':
-            agent = DQN_Agent(env, ID, lr, 'linear')
-            r = []
-        if command=='a':
-            temp = input("Choose ID: \n")
-            ID = int(temp)
-            r = []
-        if command=='s':
-            plot(r, MODELS_FOLDER + str(ID), ID)
-        if command=='e':
-            run_DQN_cartpole_experiments()
-        if command=='l':
-            import tkinter as tk
-            from tkinter import filedialog
-            file_path = filedialog.askopenfilename(initialdir=MODELS_FOLDER, title="Pasirinkite agento modeli")
-            agent = DQN_Agent(env, ID=999, filename=file_path)
 
 def run_DQN_cartpole_experiments():
     global MODELS_FOLDER
@@ -887,37 +771,3 @@ def run_experiment(ID, epochs = 100, lr=0.01, gamma=0.99, activation='linear', l
 if __name__ == "__main__":
     
     start()
-    sys.exit(0)
-    global env
-    env = gym.make("CartPole-v1")
-    #env = gym.make("FrozenLake-v0")
-   
-    '''
-    model = [QTable.Input(0, 1, 1, 0), QTable.Input(1, 2, 1, 0)]
-    import DQTable as dqt
-    table = dqt.DQTable(4, model=model)
-    for a in range(4):
-        table.setValue([-1, 0], a, (a+1))
-    for a in range(4):
-        table.setValue([1, 0], a, 2*(a+1))
-    for a in range(4):
-        table.setValue([2, 0], a, 3*(a+1))
-        
-    table.getValue([1, 0], True)
-    for e in range(20):
-        state = env.reset()
-        for s in range(100):
-            action = env.action_space.sample()
-            table.getValue([2, 0], True)
-            state, r, done, info = env.step(action)
-    print(table)'''
-    #agent = load_frozen_lake_agent(16)
-    #play_frozen_lake(agent, n=1000, verbose=3)
-    #run()
-    #run_DQN_experiments()
-    #run_QT_frozen_lake_experiments()
-    #run_QT_cartpole_experiments()
-    #run_QT_cartpole_experiments()
-
-    env.close()
-    sys.exit(0)
